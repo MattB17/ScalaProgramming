@@ -117,6 +117,92 @@ class FunSetSuite extends munit.FunSuite {
     assert(contains(f, 2), "Filter on 2")
   }
 
+  test("forall on range set is true") {
+    new TestRangeSets {
+      val p = (x: Int) => x < 5
+      assert(forall(s, p), "forall on range set is true")
+    }
+  }
+
+  test("forall fails on last element of set") {
+    new TestRangeSets {
+      val p = (x: Int) => x <= 1
+      assert(!forall(s, p), "forall fails on last element of set")
+    }
+  }
+
+  test("forall fails on multiple elements of set") {
+    new TestRangeSets {
+      val p = (x: Int) => x % 2 == 0
+      assert(!forall(s, p), "forall fails on multiple elements of set")
+    }
+  }
+
+  test("forall is true on smaller range") {
+    val s = (x: Int) => x > -20 && x < -10
+    val p = (x: Int) => x >= -30 && x < 0
+    assert(forall(s, p), "forall is true on smaller range")
+  }
+
+  test("exists is true on all elements") {
+    val s = (x: Int) => x >= 10 && x <= 20
+    val p = (x: Int) => x > 0
+    assert(exists(s, p), "exists is true on all elements")
+  }
+
+  test("exists is true for multiple elements") {
+    new TestRangeSets {
+      val p = (x: Int) => x % 2 == 1
+      assert(exists(s, p), "exists is true for multiple elements")
+    }
+  }
+
+  test("exists is true for only one element") {
+    val s = (x: Int) => x <= 10 || x > 20
+    val p = (x: Int) => x >= 10 && x <= 20
+    assert(exists(s, p), "exists is true for only one element")
+  }
+
+  test("exists is false") {
+    new TestRangeSets {
+      val p = (x: Int) => x >= 10
+      assert(!exists(s, p), "exists is false")
+    }
+  }
+
+  test("map negation") {
+    new TestRangeSets {
+      val f = (y: Int) => -y
+      val mapped_s = map(s, f)
+      assert(contains(mapped_s, 1000), "-1000 <= 3 so 1000 in mapped_s")
+      assert(contains(mapped_s, 10), "-10 <= 3 so 10 in mapped_s")
+      assert(contains(mapped_s, -3), "3 <= 3 so -3 in mapped_s")
+      assert(!contains(mapped_s, -10), "10 > 3 so -10 not in mapped_s")
+      assert(!contains(mapped_s, -1000), "1000 > 3 so -1000 not in mapped_s")
+    }
+  }
+
+  test("map square") {
+    new TestRangeSets {
+      val f = (y: Int) => y * y
+      val mapped_t = map(t, f)
+      assert(!contains(mapped_t, 1), "1 not in t so 1 not in mapped_t")
+      assert(!contains(mapped_t, 3), "sqrt(3) not in t so 3 not in mapped_t")
+      assert(contains(mapped_t, 4), "2 in t so 4 in mapped_t")
+      assert(!contains(mapped_t, 7), "sqrt(7) not in t so 7 not in mapped_t")
+      assert(contains(mapped_t, 9), "3 in t so 9 in mapped_t")
+    }
+  }
+
+  test("map to singleton") {
+    new TestRangeSets {
+      val f = (y: Int) => 1
+      val mapped_s = map(s, f)
+      assert(!contains(mapped_s, -5), "-5 not in mapped_s")
+      assert(contains(mapped_s, 1), "1 in mapped_s")
+      assert(!contains(mapped_s, 7), "7 not in mapped_s")
+    }
+  }
 
 
   import scala.concurrent.duration._
