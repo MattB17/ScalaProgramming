@@ -35,11 +35,19 @@ class Tweet(val user: String, val text: String, val retweets: Int) {
 abstract class TweetSet extends TweetSetInterface {
 
   /**
+   * This method identifies whether the TweetSet is empty.
+   */
+  def isEmpty: Boolean
+
+  /**
    * This method takes a predicate and returns a subset of all the elements
    * in the original set for which the predicate is true.
    *
    * Question: Can we implement this method here, or should it remain abstract
    * and be implemented in the subclasses?
+   *
+   * Answer: We can implement here using the filterAcc function which is specialized
+   * in each class
    */
   def filter(p: Tweet => Boolean): TweetSet = this.filterAcc(p, new Empty)
 
@@ -67,8 +75,11 @@ abstract class TweetSet extends TweetSetInterface {
    *
    * Question: Should we implement this method here, or should it remain abstract
    * and be implemented in the subclasses?
+   *
+   * Answer: we have different behaviour depending on the class type so we
+   * should have each implement its own method
    */
-  def mostRetweeted: Tweet = ???
+  def mostRetweeted: Tweet
 
   /**
    * Returns a list containing all tweets of this set, sorted by retweet count
@@ -78,8 +89,19 @@ abstract class TweetSet extends TweetSetInterface {
    * Hint: the method `remove` on TweetSet will be very useful.
    * Question: Should we implement this method here, or should it remain abstract
    * and be implemented in the subclasses?
+   *
+   * Answer: there is different behaviour for Empty vs non-Empty but that can be
+   * extracted into a helper function mostRetweeted which will be different
+   * between the two subclasses.
    */
-  def descendingByRetweet: TweetList = ???
+  def descendingByRetweet: TweetList = {
+    if (this.isEmpty) {
+      Nil
+    } else {
+      val largestTweet = this.mostRetweeted
+      new Cons(largestTweet, this.remove(largestTweet).descendingByRetweet)
+    }
+  }
 
   /**
    * The following methods are already implemented
@@ -110,9 +132,15 @@ abstract class TweetSet extends TweetSetInterface {
 }
 
 class Empty extends TweetSet {
+  override def isEmpty: Boolean = true
+
   override def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = acc
 
   override def union(that: TweetSet): TweetSet = that
+
+  override def mostRetweeted: Tweet = {
+    throw new NoSuchElementException("Max of empty set")
+  }
 
   /**
    * The following methods are already implemented
@@ -128,6 +156,7 @@ class Empty extends TweetSet {
 }
 
 class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
+  override def isEmpty: Boolean = false
 
   override def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = {
     val leftFiltered = left.filterAcc(p, new Empty)
@@ -140,7 +169,21 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
   }
 
   override def union(that: TweetSet): TweetSet = {
-    ((left union right) union that) incl elem
+    left union (right union (that incl elem))
+  }
+
+  override def mostRetweeted: Tweet = {
+    val leftMost = if (left.isEmpty) new Tweet("", "", -1) else left.mostRetweeted
+    val rightMost = if (right.isEmpty) new Tweet("", "", -1) else right.mostRetweeted
+    if (leftMost.retweets >= rightMost.retweets &&
+        leftMost.retweets >= elem.retweets) {
+      leftMost
+    } else if (rightMost.retweets >= leftMost.retweets &&
+               rightMost.retweets >= elem.retweets) {
+      rightMost
+    } else {
+      elem
+    }
   }
 
   /**
