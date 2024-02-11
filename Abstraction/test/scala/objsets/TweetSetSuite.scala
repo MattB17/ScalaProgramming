@@ -51,7 +51,7 @@ class TweetSetSuite extends munit.FunSuite {
     }
   }
 
-  test("union: with empty set2") {
+  test("union: with empty set5") {
     new TestSets {
       assertEquals(size(set1.union(set5)), 4)
     }
@@ -99,7 +99,7 @@ class TweetSetSuite extends munit.FunSuite {
       val trends = set5.descendingByRetweet
       assert(!trends.isEmpty)
       assert((trends.head.user == "a" && trends.tail.head.user == "b") ||
-             (trends.head.user == "b" && trends.tail.head.user == "a"))
+        (trends.head.user == "b" && trends.tail.head.user == "a"))
     }
   }
 
@@ -110,9 +110,6 @@ class TweetSetSuite extends munit.FunSuite {
       assert(result.head.user == "d")
     }
   }
-
-
-
 
   import scala.concurrent.duration._
   override val munitTimeout = 10.seconds
