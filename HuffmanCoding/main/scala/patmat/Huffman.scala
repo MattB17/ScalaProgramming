@@ -1,5 +1,8 @@
 package patmat
 
+import scala.annotation.tailrec
+import scala.collection.mutable
+
 /**
  * A huffman code is represented by a binary tree.
  *
@@ -74,7 +77,24 @@ trait Huffman extends HuffmanInterface:
    *       println("integer is  : "+ theInt)
    *   }
    */
-  def times(chars: List[Char]): List[(Char, Int)] = ???
+  def times(chars: List[Char]): List[(Char, Int)] = {
+    @tailrec
+    def recurTimes(remChars: List[Char],
+                   acc: mutable.HashMap[Char, Int]): mutable.HashMap[Char, Int] = {
+      remChars match {
+        case x :: xs => {
+          if (acc.contains(x)) {
+            acc(x) += 1
+          } else {
+            acc += x -> 1
+          }
+          recurTimes(xs, acc)
+        }
+        case Nil =>  acc
+      }
+    }
+    recurTimes(chars, new mutable.HashMap[Char, Int]()).toList
+  }
 
   /**
    * Returns a list of `Leaf` nodes for a given frequency table `freqs`.
