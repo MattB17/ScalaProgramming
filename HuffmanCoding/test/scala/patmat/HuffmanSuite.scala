@@ -52,9 +52,50 @@ class HuffmanSuite extends munit.FunSuite:
                  List(('a', 3), ('b', 2), ('c', 1)))
   }
 
+  test("makeOrderedLeafList from no frequencies") {
+    val emptyFreqs: List[(Char, Int)] = List()
+    val emptyLeaves: List[Leaf] = List()
+    assertEquals(makeOrderedLeafList(emptyFreqs), emptyLeaves)
+  }
+
+  test("makeOrderedLeafList from 1 frequency") {
+    val oneFreq: List[(Char, Int)] = List(('a', 5))
+    val oneLeaf: List[Leaf] = List(Leaf('a', 5))
+    assertEquals(makeOrderedLeafList(oneFreq), oneLeaf)
+  }
+
+  test("makeOrderedLeafList multiple frequencies") {
+    val multiFreqs: List[(Char, Int)] = List(('b', 2), ('a', 3), ('c', 1))
+    val multiLeaf: List[Leaf] = List(Leaf('c', 1), Leaf('b', 2), Leaf('a', 3))
+    assertEquals(makeOrderedLeafList(multiFreqs), multiLeaf)
+  }
+
 
   test("make ordered leaf list for some frequency table (15pts)") {
     assertEquals(makeOrderedLeafList(List(('t', 2), ('e', 1), ('x', 3))), List(Leaf('e',1), Leaf('t',2), Leaf('x',3)))
+  }
+
+  test("singleton with empty list") {
+    assert(!singleton(List()))
+  }
+
+  test("singleton with single leaf") {
+    new TestTrees {
+      assert(singleton(List(t0)))
+    }
+  }
+
+  test("singleton with single Fork") {
+    new TestTrees {
+      assert(singleton(List(t1)))
+    }
+  }
+
+  test("singleton with list of multiple CodeTrees") {
+    new TestTrees {
+      val treeList: List[CodeTree] = List(t0, t1, t2)
+      assert(!singleton(treeList))
+    }
   }
 
 

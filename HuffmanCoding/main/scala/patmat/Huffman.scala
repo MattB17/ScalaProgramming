@@ -103,12 +103,30 @@ trait Huffman extends HuffmanInterface:
    * head of the list should have the smallest weight), where the weight
    * of a leaf is the frequency of the character.
    */
-  def makeOrderedLeafList(freqs: List[(Char, Int)]): List[Leaf] = ???
+  def makeOrderedLeafList(freqs: List[(Char, Int)]): List[Leaf] = {
+    @tailrec
+    def buildLeafList(remFreqs: List[(Char, Int)], accLeafs: List[Leaf]): List[Leaf] = {
+      remFreqs match {
+        case Nil => accLeafs
+        case x :: xs  => {
+          val leafChar = x._1
+          val leafWeight = x._2
+          buildLeafList(xs, Leaf(leafChar, leafWeight) :: accLeafs)
+        }
+      }
+    }
+    buildLeafList(freqs.sortBy((x, y) => -y), Nil)
+  }
 
   /**
    * Checks whether the list `trees` contains only one single code tree.
    */
-  def singleton(trees: List[CodeTree]): Boolean = ???
+  def singleton(trees: List[CodeTree]): Boolean = {
+    trees match {
+      case x :: Nil => true
+      case _ => false
+    }
+  }
 
   /**
    * The parameter `trees` of this function is a list of code trees ordered
