@@ -98,10 +98,59 @@ class HuffmanSuite extends munit.FunSuite:
     }
   }
 
+  test("combine on empty list") {
+    val treeList: List[CodeTree] = List()
+    assertEquals(combine(treeList), treeList)
+  }
+
+  test("combine on 1 tree") {
+    new TestTrees {
+      val treeList: List[CodeTree] = List(t1)
+      assertEquals(combine(treeList), treeList)
+    }
+  }
+
+  test("combine on fork and leaf") {
+    new TestTrees {
+      val treeList: List[CodeTree] = List(Leaf('d', 4), t1)
+      val expectedList: List[CodeTree] = List(Fork(Leaf('d', 4), t1, List('d', 'a', 'b'), 9))
+      assertEquals(combine(treeList), expectedList)
+    }
+  }
+
+  test("combine inserts in sorted order") {
+    val leaflist = List(Leaf('e', 2), Leaf('t', 3), Leaf('x', 4), Leaf('y', 7))
+    assertEquals(combine(leaflist), List(Leaf('x', 4), Fork(Leaf('e',2),Leaf('t',3),List('e', 't'), 5), Leaf('y', 7)))
+  }
 
   test("combine of some leaf list (15pts)") {
     val leaflist = List(Leaf('e', 1), Leaf('t', 2), Leaf('x', 4))
     assertEquals(combine(leaflist), List(Fork(Leaf('e',1),Leaf('t',2),List('e', 't'),3), Leaf('x',4)))
+  }
+
+  test("until on 1 tree") {
+    new TestTrees {
+      val treeList: List[CodeTree] = List(t1)
+      assertEquals(until(singleton, combine)(treeList), treeList)
+    }
+  }
+
+  test("until on fork and leaf") {
+    new TestTrees {
+      val treeList: List[CodeTree] = List(Leaf('d', 4), t1)
+      val expectedList: List[CodeTree] = List(Fork(Leaf('d', 4), t1, List('d', 'a', 'b'), 9))
+      assertEquals(until(singleton, combine)(treeList), expectedList)
+    }
+  }
+
+  test("until inserts in sorted order") {
+    val leaflist = List(Leaf('e', 2), Leaf('t', 3), Leaf('x', 4), Leaf('y', 7))
+    val result = List(
+      Fork(Leaf('y', 7),
+           Fork(Leaf('x', 4), Fork(Leaf('e', 2), Leaf('t', 3), List('e', 't'), 5), List('x', 'e', 't'), 9),
+           List('y', 'x', 'e', 't'),
+           16))
+    assertEquals(until(singleton, combine)(leaflist), result)
   }
 
 

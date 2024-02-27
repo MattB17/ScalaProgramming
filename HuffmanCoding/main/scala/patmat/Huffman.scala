@@ -140,7 +140,28 @@ trait Huffman extends HuffmanInterface:
    * If `trees` is a list of less than two elements, that list should be returned
    * unchanged.
    */
-  def combine(trees: List[CodeTree]): List[CodeTree] = ???
+  def combine(trees: List[CodeTree]): List[CodeTree] = {
+    def insert(tree: CodeTree, restTrees: List[CodeTree]): List[CodeTree] = {
+      restTrees match {
+        case Nil => tree :: Nil
+        case x :: xs => {
+          if (weight(tree) <= weight(x)) {
+            tree :: restTrees
+          } else {
+            x :: insert(tree, xs)
+          }
+        }
+      }
+    }
+
+    trees match {
+      case x :: y :: ys => {
+        val parent = makeCodeTree(x, y)
+        insert(parent, ys)
+      }
+      case _ => trees
+    }
+  }
 
   /**
    * This function will be called in the following way:
@@ -153,7 +174,13 @@ trait Huffman extends HuffmanInterface:
    * In such an invocation, `until` should call the two functions until the list of
    * code trees contains only one single tree, and then return that singleton list.
    */
-  def until(done: List[CodeTree] => Boolean, merge: List[CodeTree] => List[CodeTree])(trees: List[CodeTree]): List[CodeTree] = ???
+  def until(done: List[CodeTree] => Boolean, merge: List[CodeTree] => List[CodeTree])(trees: List[CodeTree]): List[CodeTree] = {
+    if (done(trees)) {
+      trees
+    } else {
+      until(done, merge)(merge(trees))
+    }
+  }
 
   /**
    * This function creates a code tree which is optimal to encode the text `chars`.
