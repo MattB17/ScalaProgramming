@@ -7,6 +7,10 @@ class HuffmanSuite extends munit.FunSuite:
     val t0 = Leaf('a', 3)
     val t1 = Fork(Leaf('a',2), Leaf('b',3), List('a','b'), 5)
     val t2 = Fork(Fork(Leaf('a',2), Leaf('b',3), List('a','b'), 5), Leaf('d',4), List('a','b','d'), 9)
+    val t3 = Fork(Leaf('y', 7),
+                  Fork(Leaf('x', 4), Fork(Leaf('e', 2), Leaf('t', 3), List('e', 't'), 5), List('x', 'e', 't'), 9),
+                  List('y', 'x', 'e', 't'),
+                  16)
   }
 
 
@@ -144,13 +148,66 @@ class HuffmanSuite extends munit.FunSuite:
   }
 
   test("until inserts in sorted order") {
-    val leaflist = List(Leaf('e', 2), Leaf('t', 3), Leaf('x', 4), Leaf('y', 7))
-    val result = List(
-      Fork(Leaf('y', 7),
-           Fork(Leaf('x', 4), Fork(Leaf('e', 2), Leaf('t', 3), List('e', 't'), 5), List('x', 'e', 't'), 9),
-           List('y', 'x', 'e', 't'),
-           16))
-    assertEquals(until(singleton, combine)(leaflist), result)
+    new TestTrees {
+      val leaflist = List(Leaf('e', 2), Leaf('t', 3), Leaf('x', 4), Leaf('y', 7))
+      val result = List(t3)
+      assertEquals(until(singleton, combine)(leaflist), result)
+    }
+  }
+
+  test("createCodeTree with one char one time") {
+    assertEquals(createCodeTree(List('a')), Leaf('a', 1))
+  }
+
+  test("createCodeTree with one char multiple times") {
+    assertEquals(createCodeTree(List('b', 'b', 'b')), Leaf('b', 3))
+  }
+
+  test("createCodeTree with two chars") {
+    new TestTrees {
+      val charList = List('a', 'b', 'b', 'a', 'b')
+      assertEquals(createCodeTree(charList), t1)
+    }
+  }
+
+  test("createCodeTree complicated") {
+    new TestTrees {
+      val charList = List('y', 'e', 't', 't', 'x', 'e', 'y', 'y', 't', 'x', 'y', 'y', 'x', 'y', 'x', 'y')
+      assertEquals(createCodeTree(charList), t3)
+    }
+  }
+
+  test("decode on leaf gives empty list") {
+    new TestTrees {
+      assertEquals(decode(t0, List(0, 1, 0, 0)), List())
+    }
+  }
+
+  test("empty bit list") {
+    new TestTrees {
+      assertEquals(decode(t3, List()), List())
+    }
+  }
+
+  test("decode two letter alphabet") {
+    new TestTrees {
+      val bitList = List(0, 1, 1, 0, 0, 0, 1)
+      assertEquals(decode(t1, bitList), List('a', 'b', 'b', 'a', 'a', 'a', 'b'))
+    }
+  }
+
+  test("decode three letter alphabet") {
+    new TestTrees {
+      val bitList = List(0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1)
+      assertEquals(decode(t2, bitList), List('a', 'a', 'd', 'b', 'a', 'd', 'b'))
+    }
+  }
+
+  test("decode complicated") {
+    new TestTrees {
+      val bitList = List(1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0)
+      assertEquals(decode(t3, bitList), List('t', 'y', 'x', 'x', 'e', 't', 'y', 'x'))
+    }
   }
 
 
