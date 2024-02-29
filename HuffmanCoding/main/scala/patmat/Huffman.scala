@@ -33,7 +33,7 @@ trait Huffman extends HuffmanInterface:
 
   def chars(tree: CodeTree): List[Char] = {
     tree match {
-      case Fork(l, r, c, w) => chars(l) ::: chars(r)
+      case Fork(l, r, c, w) => c
       case Leaf(c, w) => List(c)
     }
   }
@@ -253,10 +253,44 @@ trait Huffman extends HuffmanInterface:
   // Part 4a: Encoding using Huffman tree
 
   /**
+   * Helper function to identify whether an element is in a list.
+   */
+  def inList(c: Char, charList: List[Char]): Boolean = {
+    charList match {
+      case Nil => false
+      case x :: xs => if (x == c) true else inList(c, xs)
+    }
+  }
+
+  def encodeChar(currChar: Char, subTree: CodeTree): List[Bit] = {
+    subTree match {
+      case Leaf(c, w) => Nil
+      case Fork(l, r, c, w) => {
+        if (inList(currChar, chars(l))) {
+          0 :: encodeChar(currChar, l)
+        } else {
+          1 :: encodeChar(currChar, r)
+        }
+      }
+    }
+  }
+
+  /**
    * This function encodes `text` using the code tree `tree`
    * into a sequence of bits.
    */
-  def encode(tree: CodeTree)(text: List[Char]): List[Bit] = ???
+  def encode(tree: CodeTree)(text: List[Char]): List[Bit] = {
+    text match {
+      case Nil => Nil
+      case x :: xs => {
+        if (inList(x, chars(tree))) {
+          encodeChar(x, tree) ::: encode(tree)(xs)
+        } else {
+          encode(tree)(xs)
+        }
+      }
+    }
+  }
 
   // Part 4b: Encoding using code table
 

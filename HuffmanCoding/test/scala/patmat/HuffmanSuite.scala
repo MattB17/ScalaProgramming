@@ -183,7 +183,7 @@ class HuffmanSuite extends munit.FunSuite:
     }
   }
 
-  test("empty bit list") {
+  test("decode on empty bit list") {
     new TestTrees {
       assertEquals(decode(t3, List()), List())
     }
@@ -207,6 +207,88 @@ class HuffmanSuite extends munit.FunSuite:
     new TestTrees {
       val bitList = List(1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0)
       assertEquals(decode(t3, bitList), List('t', 'y', 'x', 'x', 'e', 't', 'y', 'x'))
+    }
+  }
+
+  test("inList on empty list") {
+    assert(!inList('a', List()))
+  }
+
+  test("inList on one element list") {
+    val theList = List('a')
+    assert(inList('a', theList))
+    assert(!inList('b', theList))
+  }
+
+  test("inList on multiple elements") {
+    val theList = List('a', 'b', 'a', 'c')
+    assert(inList('a', theList))
+    assert(inList('c', theList))
+    assert(!inList('d', theList))
+  }
+
+  test("encodeChar on leaf") {
+    new TestTrees {
+      assertEquals(encodeChar('a', t0), List())
+    }
+  }
+
+  test("encodeChar on simple fork") {
+    new TestTrees {
+      assertEquals(encodeChar('a', t1), List(0))
+      assertEquals(encodeChar('b', t1), List(1))
+    }
+  }
+
+  test("encodeChar on 2 level tree") {
+    new TestTrees {
+      assertEquals(encodeChar('b', t2), List(0, 1))
+      assertEquals(encodeChar('d', t2), List(1))
+    }
+  }
+
+  test("encodeChar on complex tree") {
+    new TestTrees {
+      assertEquals(encodeChar('y', t3), List(0))
+      assertEquals(encodeChar('x', t3), List(1, 0))
+      assertEquals(encodeChar('e', t3), List(1, 1, 0))
+      assertEquals(encodeChar('t', t3), List(1, 1, 1))
+    }
+  }
+
+  test("encode on leaf gives empty list") {
+    new TestTrees {
+      assertEquals(encode(t0)(List('a', 'b', 'c', 'a')), List())
+    }
+  }
+
+  test("encode on empty char list") {
+    new TestTrees {
+      assertEquals(encode(t3)(List()), List())
+    }
+  }
+
+  test("encode two letter alphabet") {
+    new TestTrees {
+      val charList = List('a', 'b', 'b', 'a', 'a', 'a', 'b')
+      val bitList = List(0, 1, 1, 0, 0, 0, 1)
+      assertEquals(encode(t1)(charList), bitList)
+    }
+  }
+
+  test("encode three letter alphabet") {
+    new TestTrees {
+      val charList = List('a', 'a', 'd', 'b', 'a', 'd', 'b')
+      val bitList = List(0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1)
+      assertEquals(encode(t2)(charList), bitList)
+    }
+  }
+
+  test("encode complicated") {
+    new TestTrees {
+      val charList = List('t', 'y', 'x', 'x', 'e', 't', 'y', 'x')
+      val bitList = List(1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0)
+      assertEquals(encode(t3)(charList), bitList)
     }
   }
 
