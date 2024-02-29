@@ -298,6 +298,99 @@ class HuffmanSuite extends munit.FunSuite:
       assertEquals(decode(t1, encode(t1)("ab".toList)), "ab".toList)
   }
 
+  trait TestTables {
+    val ct0: CodeTable = List(('a', List()))
+    val ct1: CodeTable = List(('a', List(0)), ('b', List(1)))
+    val ct2: CodeTable = List(('a', List(0, 0)), ('b', List(0, 1)), ('d', List(1)))
+    val ct3: CodeTable = List(('y', List(0)), ('x', List(1, 0)), ('e', List(1, 1, 0)), ('t', List(1, 1, 1)))
+  }
+
+  test("codeBits on empty code table") {
+    new TestTables {
+      assertEquals(codeBits(List())('a'), List())
+    }
+  }
+
+  test("codeBits on simple code table") {
+    new TestTables {
+      assertEquals(codeBits(ct1)('b'), List(1))
+    }
+  }
+
+  test("codeBits on larger code table") {
+    new TestTables {
+      assertEquals(codeBits(ct3)('e'), List(1, 1, 0))
+    }
+  }
+
+  test("codeBits char not in table") {
+    new TestTables {
+      assertEquals(codeBits(ct3)('z'), List())
+    }
+  }
+
+  test("mergeCodeTables two simple tables") {
+    new TestTables {
+      val table0: CodeTable = List(('a', List(0)))
+      val table1: CodeTable = List(('b', List(1)))
+      assertEquals(mergeCodeTables(table0, table1), ct1)
+    }
+  }
+
+  test("mergeCodeTable more complex") {
+    new TestTables {
+      val table0: CodeTable = List(('a', List(0, 0)), ('b', List(0, 1)))
+      val table1: CodeTable = List(('d', List(1)))
+      assertEquals(mergeCodeTables(table0, table1), ct2)
+    }
+  }
+
+  test("convert") {
+    new TestTrees {
+      new TestTables {
+        assertEquals(convert(t0), ct0)
+        assertEquals(convert(t1), ct1)
+        assertEquals(convert(t2), ct2)
+        assertEquals(convert(t3), ct3)
+      }
+    }
+  }
+
+  test("quickEncode on leaf gives empty list") {
+    new TestTrees {
+      assertEquals(quickEncode(t0)(List('a', 'b', 'c', 'a')), List())
+    }
+  }
+
+  test("quickEncode on empty char list") {
+    new TestTrees {
+      assertEquals(quickEncode(t3)(List()), List())
+    }
+  }
+
+  test("quickEncode two letter alphabet") {
+    new TestTrees {
+      val charList = List('a', 'b', 'b', 'a', 'a', 'a', 'b')
+      val bitList = List(0, 1, 1, 0, 0, 0, 1)
+      assertEquals(quickEncode(t1)(charList), bitList)
+    }
+  }
+
+  test("quickEncode three letter alphabet") {
+    new TestTrees {
+      val charList = List('a', 'a', 'd', 'b', 'a', 'd', 'b')
+      val bitList = List(0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1)
+      assertEquals(quickEncode(t2)(charList), bitList)
+    }
+  }
+
+  test("quickEncode complicated") {
+    new TestTrees {
+      val charList = List('t', 'y', 'x', 'x', 'e', 't', 'y', 'x')
+      val bitList = List(1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 0)
+      assertEquals(quickEncode(t3)(charList), bitList)
+    }
+  }
 
   import scala.concurrent.duration.*
   override val munitTimeout = 10.seconds
