@@ -3,8 +3,16 @@ package forcomp
 class AnagramsSuite extends munit.FunSuite:
   import Anagrams.*
 
+  test("wordOccurrences: empty string") {
+    assertEquals(wordOccurrences(""), List())
+  }
+
   test("wordOccurrences: abcd (3pts)") {
     assertEquals(wordOccurrences("abcd"), List(('a', 1), ('b', 1), ('c', 1), ('d', 1)))
+  }
+
+  test("wordOccurrences: ZyXxXwW") {
+    assertEquals(wordOccurrences("ZyXxXwW"), List(('w', 2), ('x', 3), ('y', 1), ('z', 1)))
   }
 
   test("wordOccurrences: Robert (3pts)") {
@@ -12,8 +20,21 @@ class AnagramsSuite extends munit.FunSuite:
   }
 
 
+  test("sentenceOccurrences: empty sentence") {
+    assertEquals(sentenceOccurrences(List()), List())
+  }
+
+  test("sentenceOccurrences: Matt") {
+    assertEquals(sentenceOccurrences(List("Matt")), List(('a', 1), ('m', 1), ('t', 2)))
+  }
+
   test("sentenceOccurrences: abcd e (5pts)") {
     assertEquals(sentenceOccurrences(List("abcd", "e")), List(('a', 1), ('b', 1), ('c', 1), ('d', 1), ('e', 1)))
+  }
+
+  test("sentenceOccurrences: ZyXxXwW abcd") {
+    assertEquals(sentenceOccurrences(List("ZyXxXwW", "abcd")),
+      List(('a', 1), ('b', 1), ('c', 1), ('d', 1), ('w', 2), ('x', 3), ('y', 1), ('z', 1)))
   }
 
 
@@ -21,6 +42,27 @@ class AnagramsSuite extends munit.FunSuite:
     assertEquals(dictionaryByOccurrences.get(List(('a', 1), ('e', 1), ('t', 1))).map(_.toSet), Some(Set("ate", "eat", "tea")))
   }
 
+  test("dictionaryByOccurrences.get: a") {
+    assertEquals(dictionaryByOccurrences.get(List(('a', 1))).map(_.toSet), Some(Set("a")))
+  }
+
+  test("dictionaryByOccurrences.get: married") {
+    assertEquals(dictionaryByOccurrences.get(List(('a', 1), ('d', 1), ('e', 1), ('i', 1), ('m', 1), ('r', 2))).map(_.toSet),
+      Some(Set("married", "admirer")))
+  }
+
+  test("dictionaryByOccurrences.get: player") {
+    assertEquals(dictionaryByOccurrences.get(List(('a', 1), ('e', 1), ('l', 1), ('p', 1), ('r', 1), ('y', 1))).map(_.toSet),
+      Some(Set("parley", "pearly", "player", "replay")))
+  }
+
+  test("wordAnagrams xxyyzz") {
+    assertEquals(wordAnagrams("xxyyzz").toSet, Set())
+  }
+
+  test("wordAnagrams a") {
+    assertEquals(wordAnagrams("a").toSet, Set("a"))
+  }
 
   test("wordAnagrams married (2pts)") {
     assertEquals(wordAnagrams("married").toSet, Set("married", "admirer"))
