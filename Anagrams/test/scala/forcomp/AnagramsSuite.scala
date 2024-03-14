@@ -81,9 +81,54 @@ class AnagramsSuite extends munit.FunSuite:
     assertEquals(subtract(lard, r), lad)
   }
 
+  test("subtract: assessment - assess") {
+    val assessment = List(('a', 1), ('e', 2), ('m', 1), ('n', 1), ('s', 4), ('t', 1))
+    val assess = List(('a', 1), ('e', 1), ('s', 4))
+    val ment = List(('e', 1), ('m', 1), ('n', 1), ('t', 1))
+    assertEquals(subtract(assessment, assess), ment)
+  }
+
+  test("subtract with two empty lists") {
+    assertEquals(subtract(List(), List()), List())
+  }
+
+  test("subtract: art - List()") {
+    val art = List(('a', 1), ('r', 1), ('t', 1))
+    assertEquals(subtract(art, List()), art)
+  }
+
+  test("subtractSlow: lard - r (10pts)") {
+    val lard = List(('a', 1), ('d', 1), ('l', 1), ('r', 1))
+    val r = List(('r', 1))
+    val lad = List(('a', 1), ('d', 1), ('l', 1))
+    assertEquals(subtractSlow(lard, r), lad)
+  }
+
+  test("subtractSlow: assessment - assess") {
+    val assessment = List(('a', 1), ('e', 2), ('m', 1), ('n', 1), ('s', 4), ('t', 1))
+    val assess = List(('a', 1), ('e', 1), ('s', 4))
+    val ment = List(('e', 1), ('m', 1), ('n', 1), ('t', 1))
+    assertEquals(subtractSlow(assessment, assess), ment)
+  }
+
+  test("subtractSlow with two empty lists") {
+    assertEquals(subtractSlow(List(), List()), List())
+  }
+
+  test("subtractSlow: art - List()") {
+    val art = List(('a', 1), ('r', 1), ('t', 1))
+    assertEquals(subtractSlow(art, List()), art)
+  }
+
 
   test("combinations: [] (8pts)") {
     assertEquals(combinations(Nil), List(Nil))
+  }
+
+  test("combinations: aaa") {
+    val aaa = List(('a', 3))
+    val aaacomb = List(List(), List(('a', 1)), List(('a', 2)), List(('a', 3)))
+    assertEquals(combinations(aaa).toSet, aaacomb.toSet)
   }
 
   test("combinations: abba (8pts)") {

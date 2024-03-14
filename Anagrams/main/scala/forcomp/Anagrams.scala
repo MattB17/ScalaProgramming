@@ -104,7 +104,18 @@ object Anagrams extends AnagramsInterface:
    *  Note that the order of the occurrence list subsets does not matter -- the subsets
    *  in the example above could have been displayed in some other order.
    */
-  def combinations(occurrences: Occurrences): List[Occurrences] = ???
+  def combinations(occurrences: Occurrences): List[Occurrences] = {
+    occurrences match {
+      case Nil => List(Nil)
+      case x :: xs => {
+        val rem = combinations(xs)
+        (for
+          count <- (0 to x._2)
+          rest <- rem
+        yield if (count > 0) then (x._1, count) :: rest else rest).toList
+      }
+    }
+  }
 
   /** Subtracts occurrence list `y` from occurrence list `x`.
    *
@@ -115,8 +126,52 @@ object Anagrams extends AnagramsInterface:
    *
    *  Note: the resulting value is an occurrence - meaning it is sorted
    *  and has no zero-entries.
+   *
+   *  This is an efficient, non functional implementation of subtract:
+   *  occurence lists are sorted and y is a subset of x so we can iterate
+   *  through the 2 simultaneously. For the head element of y if it is
+   *  the head element of x just do the subtraction, otherwise because they
+   *  are sorted and y is a subset of x, there must be an element later on
+   *  in x that is the same as the head of y, so just append the head of x and
+   *  continue
    */
-  def subtract(x: Occurrences, y: Occurrences): Occurrences = ???
+  def subtract(x: Occurrences, y: Occurrences): Occurrences = {
+    y match {
+      case Nil => x
+      case y1 :: ys => {
+        if (y1._1 == x.head._1) {
+          if (y1._2 == x.head._2) {
+            subtract(x.tail, ys)
+          } else {
+            (y1._1, x.head._2 - y1._2) :: subtract(x.tail, ys)
+          }
+        } else {
+          x.head :: subtract(x.tail, y)
+        }
+      }
+    }
+  }
+
+  // Purely functional version of subtract
+  // It's slow because you need a sort at the end and also while map lookup is O(1)
+  // it is likely not as fast as direct access.
+  def subtractSlow(x: Occurrences, y: Occurrences): Occurrences = {
+    val mapX = x.toMap
+    val mapY = y.toMap
+    val resultMap = mapX.foldLeft(Map[Char, Int]())((resMap, xElem) => {
+      mapY.find((c, n) => c == xElem._1) match {
+        case None => resMap + xElem
+        case Some(yc, yn) => {
+          if (yn == xElem._2) {
+            resMap
+          } else {
+            resMap + (yc -> (xElem._2 - yn))
+          }
+        }
+      }
+    })
+    resultMap.toList.sortWith((occ1, occ2) => occ1._1 < occ2._1)
+  }
 
   /** Returns a list of all anagram sentences of the given sentence.
    *
