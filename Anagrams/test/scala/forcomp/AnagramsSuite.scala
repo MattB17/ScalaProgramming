@@ -72,8 +72,6 @@ class AnagramsSuite extends munit.FunSuite:
     assertEquals(wordAnagrams("player").toSet, Set("parley", "pearly", "player", "replay"))
   }
 
-
-
   test("subtract: lard - r (10pts)") {
     val lard = List(('a', 1), ('d', 1), ('l', 1), ('r', 1))
     val r = List(('r', 1))
@@ -147,10 +145,41 @@ class AnagramsSuite extends munit.FunSuite:
     assertEquals(combinations(abba).toSet, abbacomb.toSet)
   }
 
-
   test("sentence anagrams: [] (10pts)") {
     val sentence = List()
     assertEquals(sentenceAnagrams(sentence), List(Nil))
+  }
+
+  test("sentence anagrams: I love you") {
+    val sentence = List("I", "love", "you")
+    val anags = List(
+      List("you", "I", "love"),
+      List("you", "Io", "Lev"),
+      List("you", "Lev", "Io"),
+      List("you", "love", "I"),
+      List("you", "olive"),
+      List("I", "you", "love"),
+      List("I", "love", "you"),
+      List("Io", "you", "Lev"),
+      List("Io", "Lev", "you"),
+      List("Lev", "you", "Io"),
+      List("Lev", "Io", "you"),
+      List("love", "you", "I"),
+      List("love", "I", "you"),
+      List("olive", "you")
+    )
+    assertEquals(sentenceAnagrams(sentence).toSet, anags.toSet)
+  }
+
+  test("sentence anagrams: Robert") {
+    val sentence = List("Robert")
+    val anags = List(
+      List("or", "Bert"),
+      List("Orr", "bet"),
+      List("bet", "Orr"),
+      List("Bert", "or"),
+      List("Robert"))
+    assertEquals(sentenceAnagrams(sentence).toSet, anags.toSet)
   }
 
   test("sentence anagrams: Linux rulez (10pts)") {
@@ -178,6 +207,70 @@ class AnagramsSuite extends munit.FunSuite:
       List("Linux", "rulez")
     )
     assertEquals(sentenceAnagrams(sentence).toSet, anas.toSet)
+  }
+
+  test("sentence anagrams memo: [] (10pts)") {
+    val sentence = List()
+    assertEquals(sentenceAnagramsMemo(sentence), List(Nil))
+  }
+
+  test("sentence anagrams memo: I love you") {
+    val sentence = List("I", "love", "you")
+    val anags = List(
+      List("you", "I", "love"),
+      List("you", "Io", "Lev"),
+      List("you", "Lev", "Io"),
+      List("you", "love", "I"),
+      List("you", "olive"),
+      List("I", "you", "love"),
+      List("I", "love", "you"),
+      List("Io", "you", "Lev"),
+      List("Io", "Lev", "you"),
+      List("Lev", "you", "Io"),
+      List("Lev", "Io", "you"),
+      List("love", "you", "I"),
+      List("love", "I", "you"),
+      List("olive", "you")
+    )
+    assertEquals(sentenceAnagramsMemo(sentence).toSet, anags.toSet)
+  }
+
+  test("sentence anagrams memo: Robert") {
+    val sentence = List("Robert")
+    val anags = List(
+      List("or", "Bert"),
+      List("Orr", "bet"),
+      List("bet", "Orr"),
+      List("Bert", "or"),
+      List("Robert"))
+    assertEquals(sentenceAnagramsMemo(sentence).toSet, anags.toSet)
+  }
+
+  test("sentence anagrams memo: Linux rulez (10pts)") {
+    val sentence = List("Linux", "rulez")
+    val anas = List(
+      List("Rex", "Lin", "Zulu"),
+      List("nil", "Zulu", "Rex"),
+      List("Rex", "nil", "Zulu"),
+      List("Zulu", "Rex", "Lin"),
+      List("null", "Uzi", "Rex"),
+      List("Rex", "Zulu", "Lin"),
+      List("Uzi", "null", "Rex"),
+      List("Rex", "null", "Uzi"),
+      List("null", "Rex", "Uzi"),
+      List("Lin", "Rex", "Zulu"),
+      List("nil", "Rex", "Zulu"),
+      List("Rex", "Uzi", "null"),
+      List("Rex", "Zulu", "nil"),
+      List("Zulu", "Rex", "nil"),
+      List("Zulu", "Lin", "Rex"),
+      List("Lin", "Zulu", "Rex"),
+      List("Uzi", "Rex", "null"),
+      List("Zulu", "nil", "Rex"),
+      List("rulez", "Linux"),
+      List("Linux", "rulez")
+    )
+    assertEquals(sentenceAnagramsMemo(sentence).toSet, anas.toSet)
   }
 
 

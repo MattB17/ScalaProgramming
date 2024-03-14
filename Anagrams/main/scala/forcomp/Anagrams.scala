@@ -74,12 +74,16 @@ object Anagrams extends AnagramsInterface:
     dictionary.groupBy((word: Word) => wordOccurrences(word))
   }
 
-  /** Returns all the anagrams of a given word. */
-  def wordAnagrams(word: Word): List[Word] = {
-    dictionaryByOccurrences.get(wordOccurrences(word)) match {
+  def anagramsForOccurrences(occurrences: Occurrences): List[Word] = {
+    dictionaryByOccurrences.get(occurrences) match {
       case Some(wordList) => wordList
       case None => Nil
     }
+  }
+
+  /** Returns all the anagrams of a given word. */
+  def wordAnagrams(word: Word): List[Word] = {
+    anagramsForOccurrences(wordOccurrences(word))
   }
 
   /** Returns the list of all subsets of the occurrence list.
@@ -213,7 +217,41 @@ object Anagrams extends AnagramsInterface:
    *
    *  Note: There is only one anagram of an empty sentence.
    */
-  def sentenceAnagrams(sentence: Sentence): List[Sentence] = ???
+  def sentenceAnagrams(sentence: Sentence): List[Sentence] = {
+    def sentenceAnagramsHelper(remOccs: Occurrences): List[Sentence] = {
+      if (remOccs.isEmpty) {
+        List(Nil)
+      } else {
+        val combos = combinations(remOccs)
+        for
+          currOccs <- combos
+          word <- anagramsForOccurrences(currOccs)
+          rest <- sentenceAnagramsHelper(subtract(remOccs, currOccs))
+        yield word :: rest
+      }
+    }
+
+    sentenceAnagramsHelper(sentenceOccurrences(sentence))
+  }
+
+  // A more efficient implementation of senterce Anagrams that uses memoization
+  def sentenceAnagramsMemo(sentence: Sentence): List[Sentence] = {
+    val memo = collection.mutable.Map[Occurrences, List[Occurrences]]()
+
+    def sentenceAnagramsMemoHelper(remOccs: Occurrences): List[Sentence] = {
+      if (remOccs.isEmpty) {
+        List(Nil)
+      } else {
+        for
+          currOccs <- memo.getOrElseUpdate(remOccs, combinations(remOccs))
+          word <- anagramsForOccurrences(currOccs)
+          rest <- sentenceAnagramsMemoHelper(subtract(remOccs, currOccs))
+        yield word :: rest
+      }
+    }
+
+    sentenceAnagramsMemoHelper(sentenceOccurrences(sentence))
+  }
 
 object Dictionary:
   def loadDictionary: List[String] =
