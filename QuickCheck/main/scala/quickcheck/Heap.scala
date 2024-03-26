@@ -66,19 +66,24 @@ trait BinomialHeap extends Heap:
       val (Node(_, _, c), tsq) = getMin(t, ts)
       meld(c.reverse, tsq)
 
+// The problem with this one is that for a non-empty heap it always returns
+// the root as the min.
 trait Bogus1BinomialHeap extends BinomialHeap:
   override def findMin(ts: H) = ts match
     case Nil => throw new NoSuchElementException("min of empty heap")
     case t :: ts => root(t)
 
+// This one swaps the ordering in linking.
 trait Bogus2BinomialHeap extends BinomialHeap:
   override protected def link(t1: Node, t2: Node): Node = // t1.r == t2.r
     if !ord.lteq(t1.x, t2.x) then Node(t1.x, t1.r + 1, t2 :: t1.c) else Node(t2.x, t2.r + 1, t1 :: t2.c)
 
+// This one throws away the elements from one of the nodes.
 trait Bogus3BinomialHeap extends BinomialHeap:
   override protected def link(t1: Node, t2: Node): Node = // t1.r == t2.r
     if ord.lteq(t1.x, t2.x) then Node(t1.x, t1.r + 1, t1 :: t1.c) else Node(t2.x, t2.r + 1, t2 :: t2.c)
 
+// Just assumes that t is the min and deletes it.
 trait Bogus4BinomialHeap extends BinomialHeap:
   override def deleteMin(ts: H) = ts match
     case Nil => throw new NoSuchElementException("delete min of empty heap")
