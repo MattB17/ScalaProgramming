@@ -89,6 +89,8 @@ trait Bogus4BinomialHeap extends BinomialHeap:
     case Nil => throw new NoSuchElementException("delete min of empty heap")
     case t :: ts => meld(t.c.reverse, ts)
 
+// It ruins the ordering when combining 2 heaps, it just takes the 1st
+// followed by the 2nd
 trait Bogus5BinomialHeap extends BinomialHeap:
   override def meld(ts1: H, ts2: H) = ts1 match
     case Nil => ts2
