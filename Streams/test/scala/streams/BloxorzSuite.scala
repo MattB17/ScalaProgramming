@@ -20,20 +20,49 @@ class BloxorzSuite extends munit.FunSuite:
           case Down => block.down
     }
 
-  trait Level1 extends SolutionChecker:
-      /* terrain for level 1*/
+  trait Level0 extends SolutionChecker {
+    /* terrain for level 0 */
 
     val level =
-    """ooo-------
-      |oSoooo----
-      |ooooooooo-
-      |-ooooooooo
-      |-----ooToo
-      |------ooo-""".stripMargin
+      """Soo
+        |-oo
+        |Too""".stripMargin
 
     import Move.*
-    val optsolution = List(Right, Right, Down, Right, Right, Right, Down)
 
+    val optSolution = List(Right, Down, Down, Left)
+  }
+
+  trait Level1 extends SolutionChecker {
+    /* terrain for level 1*/
+
+    val level =
+      """ooo-------
+        |oSoooo----
+        |ooooooooo-
+        |-ooooooooo
+        |-----ooToo
+        |------ooo-""".stripMargin
+
+    import Move.*
+
+    val optsolution = List(Right, Right, Down, Right, Right, Right, Down)
+  }
+
+  test("terrain function level 0") {
+    new Level0 {
+      assert(terrain(Pos(0, 0)), "0,0")
+      assert(terrain(Pos(0, 2)), "0,2")
+      assert(terrain(Pos(1, 2)), "1,2")
+      assert(terrain(Pos(2, 0)), "2,0")
+      assert(terrain(Pos(2, 2)), "2,2")
+      assert(!terrain(Pos(1, -1)), "1,-1")
+      assert(!terrain(Pos(-1, 2)), "-1,2")
+      assert(!terrain(Pos(1, 3)), "1,3")
+      assert(!terrain(Pos(3, 1)), "3,1")
+      assert(!terrain(Pos(1, 0)), "1,0")
+    }
+  }
 
   test("terrain function level 1 (10pts)") {
     new Level1:
@@ -48,6 +77,13 @@ class BloxorzSuite extends munit.FunSuite:
       assert(!terrain(Pos(-1,0)), "-1,0")
       assert(!terrain(Pos(0,-1)), "0,-1")
     }
+
+  test("find char level 0") {
+    new Level0 {
+      assertEquals(startPos, Pos(0, 0))
+      assertEquals(goal, Pos(2, 0))
+    }
+  }
 
   test("find char level 1 (10pts)") {
     new Level1:

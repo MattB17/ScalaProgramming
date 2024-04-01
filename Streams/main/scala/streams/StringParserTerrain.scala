@@ -1,5 +1,7 @@
 package streams
 
+import scala.annotation.tailrec
+
 /**
  * This component implements a parser to define terrains from a
  * graphical ASCII representation.
@@ -17,9 +19,9 @@ package streams
  * - The `-` character denotes parts which are outside the terrain
  * - `o` denotes fields which are part of the terrain
  * - `S` denotes the start position of the block (which is also considered
-     inside the terrain)
+     *inside the terrain)
  * - `T` denotes the final position of the block (which is also considered
-     inside the terrain)
+     *inside the terrain)
  *
  * In this example, the first and last lines could be omitted, and
  * also the columns that consist of `-` characters only.
@@ -50,7 +52,11 @@ trait StringParserTerrain extends GameDef:
    * a valid position (not a '-' character) inside the terrain described
    * by `levelVector`.
    */
-  def terrainFunction(levelVector: Vector[Vector[Char]]): Pos => Boolean = ???
+  def terrainFunction(levelVector: Vector[Vector[Char]]): Pos => Boolean = {
+    (p: Pos) => (p.row >= 0 && p.row < levelVector.length &&
+                 p.col >= 0 && p.col < levelVector(p.row).length &&
+                 levelVector(p.row)(p.col) != '-')
+  }
 
   /**
    * This function should return the position of character `c` in the
@@ -60,7 +66,19 @@ trait StringParserTerrain extends GameDef:
    * Hint: you can use the functions `indexWhere` and / or `indexOf` of the
    * `Vector` class
    */
-  def findChar(c: Char, levelVector: Vector[Vector[Char]]): Pos = ???
+  def findChar(c: Char, levelVector: Vector[Vector[Char]]): Pos = {
+    @tailrec
+    def findCharHelper(rowIdx: Int): Pos = {
+      val colIdx = levelVector(rowIdx).indexOf(c)
+      if (colIdx == -1) {
+        findCharHelper(rowIdx + 1)
+      } else {
+        Pos(rowIdx, colIdx)
+      }
+    }
+
+    findCharHelper(0)
+  }
 
   private lazy val vector: Vector[Vector[Char]] =
     Vector(level.split("\r?\n").map(str => Vector(str*)).toIndexedSeq*)
