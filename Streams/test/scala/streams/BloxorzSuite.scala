@@ -90,6 +90,59 @@ class BloxorzSuite extends munit.FunSuite:
       assertEquals(startPos, Pos(1, 1))
   }
 
+  test("level 0 start block") {
+    new Level0 {
+      assert(startBlock.isStanding)
+      assert(startBlock.isLegal)
+    }
+  }
+
+  test("level 1 start block") {
+    new Level1 {
+      assert(startBlock.isStanding)
+      assert(startBlock.isLegal)
+    }
+  }
+
+  test("level 0 moves") {
+    new Level0 {
+      // start block is upright at 0,0
+      val block : Block = startBlock
+
+      // now block is not standing and in 0,1 and 0,2
+      val right0 : Block = block.right
+      assert(!right0.isStanding)
+      assert(right0.isLegal)
+
+      // block is still not standing but is in 1,1 and 1,2
+      val down0 : Block = right0.down
+      assert(!down0.isStanding)
+      assert(down0.isLegal)
+
+      // flips block up to 1,0 which is not a legal space
+      val left0: Block = down0.left
+      assert(!left0.isLegal)
+
+      // rolls block to 2,1 and 2,2
+      val down1 : Block = down0.down
+      assert(!down1.isStanding)
+      assert(down1.isLegal)
+
+      // flips upright on target 2,0
+      val left1 : Block = down1.left
+      assert(left1.isStanding)
+      assert(left1.isLegal)
+
+      // flips upright on 0,3 which is not legal
+      val right1 : Block = right0.right
+      assert(!right1.isLegal)
+
+      // rolls down to 3,1 and 3,2 which is not legal
+      val down2 : Block = down1.down
+      assert(!down2.isLegal)
+    }
+  }
+
 
   test("optimal solution for level 1 (5pts)") {
     new Level1:
