@@ -143,6 +143,164 @@ class BloxorzSuite extends munit.FunSuite:
     }
   }
 
+  test("level 1 moves") {
+    new Level1 {
+      val up0 : Block = startBlock.up
+      assert(!up0.isLegal)
+
+      val right0 : Block = startBlock.right
+      assert(!right0.isStanding)
+      assert(right0.isLegal)
+
+      val left0 : Block = right0.left
+      assert(left0.isStanding)
+      assert(left0.isLegal)
+
+      val right1 : Block = right0.right
+      assert(right1.isStanding)
+      assert(right1.isLegal)
+
+      val down0 : Block = right1.down
+      assert(!down0.isStanding)
+      assert(down0.isLegal)
+
+      val right2 : Block = down0.right
+      assert(!right2.isStanding)
+      assert(right2.isLegal)
+
+      val right3 : Block = right2.right
+      assert(!right3.isStanding)
+      assert(right3.isLegal)
+
+      val right4 : Block = right3.right
+      assert(!right4.isStanding)
+      assert(right4.isLegal)
+
+      val up1 : Block = right4.up
+      assert(!up1.isLegal)
+
+      val down1 : Block = right4.down
+      assert(down1.isStanding)
+      assert(down1.isLegal)
+    }
+  }
+
+  test("level 0 neighbors") {
+    new Level0 {
+      assertEquals(startBlock.neighbors,
+        List((startBlock.left, Move.Left),
+             (startBlock.up, Move.Up),
+             (startBlock.right, Move.Right),
+             (startBlock.down, Move.Down)))
+      assertEquals(startBlock.legalNeighbors,
+        List((startBlock.right, Move.Right)))
+
+      val right0 : Block = startBlock.right
+      assertEquals(right0.neighbors,
+        List((right0.left, Move.Left),
+             (right0.up, Move.Up),
+             (right0.right, Move.Right),
+             (right0.down, Move.Down)))
+      assertEquals(right0.legalNeighbors,
+        List((right0.left, Move.Left), (right0.down, Move.Down)))
+
+      val down0 : Block = right0.down
+      assertEquals(down0.neighbors,
+        List((down0.left, Move.Left),
+          (down0.up, Move.Up),
+          (down0.right, Move.Right),
+          (down0.down, Move.Down)))
+      assertEquals(down0.legalNeighbors,
+        List((down0.up, Move.Up), (down0.down, Move.Down)))
+
+      val down1: Block = down0.down
+      assertEquals(down1.neighbors,
+        List((down1.left, Move.Left),
+          (down1.up, Move.Up),
+          (down1.right, Move.Right),
+          (down1.down, Move.Down)))
+      assertEquals(down1.legalNeighbors,
+        List((down1.left, Move.Left), (down1.up, Move.Up)))
+    }
+  }
+
+  test("level 1 neighbors") {
+    new Level1 {
+      assertEquals(startBlock.neighbors,
+        List((startBlock.left, Move.Left),
+             (startBlock.up, Move.Up),
+             (startBlock.right, Move.Right),
+             (startBlock.down, Move.Down)))
+      assertEquals(startBlock.legalNeighbors,
+        List((startBlock.right, Move.Right), (startBlock.down, Move.Down)))
+
+      val right0 : Block = startBlock.right
+      assertEquals(right0.neighbors,
+        List((right0.left, Move.Left),
+          (right0.up, Move.Up),
+          (right0.right, Move.Right),
+          (right0.down, Move.Down)))
+      assertEquals(right0.legalNeighbors,
+        List((right0.left, Move.Left),
+             (right0.right, Move.Right),
+             (right0.down, Move.Down)))
+
+      val right1: Block = right0.right
+      assertEquals(right1.neighbors,
+        List((right1.left, Move.Left),
+          (right1.up, Move.Up),
+          (right1.right, Move.Right),
+          (right1.down, Move.Down)))
+      assertEquals(right1.legalNeighbors,
+        List((right1.left, Move.Left), (right1.down, Move.Down)))
+
+      val down0: Block = right1.down
+      assertEquals(down0.neighbors,
+        List((down0.left, Move.Left),
+          (down0.up, Move.Up),
+          (down0.right, Move.Right),
+          (down0.down, Move.Down)))
+      assertEquals(down0.legalNeighbors,
+        List((down0.left, Move.Left),
+          (down0.up, Move.Up),
+          (down0.right, Move.Right)))
+
+      val right2: Block = down0.right
+      assertEquals(right2.neighbors,
+        List((right2.left, Move.Left),
+          (right2.up, Move.Up),
+          (right2.right, Move.Right),
+          (right2.down, Move.Down)))
+      assertEquals(right2.legalNeighbors,
+        List((right2.left, Move.Left),
+          (right2.up, Move.Up),
+          (right2.right, Move.Right),
+          (right2.down, Move.Down)))
+
+      val right3: Block = right2.right
+      assertEquals(right3.neighbors,
+        List((right3.left, Move.Left),
+          (right3.up, Move.Up),
+          (right3.right, Move.Right),
+          (right3.down, Move.Down)))
+      assertEquals(right3.legalNeighbors,
+        List((right3.left, Move.Left),
+          (right3.right, Move.Right),
+          (right3.down, Move.Down)))
+
+      val right4: Block = right3.right
+      assertEquals(right4.neighbors,
+        List((right4.left, Move.Left),
+          (right4.up, Move.Up),
+          (right4.right, Move.Right),
+          (right4.down, Move.Down)))
+      assertEquals(right4.legalNeighbors,
+        List((right4.left, Move.Left),
+          (right4.right, Move.Right),
+          (right4.down, Move.Down)))
+    }
+  }
+
 
   test("optimal solution for level 1 (5pts)") {
     new Level1:
