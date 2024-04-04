@@ -301,6 +301,115 @@ class BloxorzSuite extends munit.FunSuite:
     }
   }
 
+  test("level 0 done") {
+    new Level0 {
+      assert(!done(startBlock))
+
+      val right0 : Block = startBlock.right
+      assert(!done(right0))
+
+      val down0 : Block = right0.down
+      assert(!done(down0))
+
+      val down1 : Block = down0.down
+      assert(!done(down1))
+
+      val left0 : Block = down1.left
+      assert(done(left0))
+    }
+  }
+
+  test("level 1 done") {
+    new Level1 {
+      assert(!done(startBlock))
+
+      val right0 : Block = startBlock.right
+      assert(!done(right0))
+
+      val right1 : Block = right0.right
+      assert(!done(right1))
+
+      val down0 : Block = right1.down
+      assert(!done(down0))
+
+      val right2 : Block = down0.right
+      assert(!done(right2))
+
+      val right3 : Block = right2.right
+      assert(!done(right3))
+
+      // We now reverse the order of the last 2 moves so that the block lies
+      // flat on the target, this should not be considered done as the block
+      // is not standing
+      val wrongDown : Block = right3.down
+      assert(!done(wrongDown))
+      val wrongRight : Block = wrongDown.right
+      assert(!done(wrongRight))
+
+      // We now do the correct order of moves to the finish
+      val right4 : Block = right3.right
+      assert(!done(right4))
+      val down1 : Block = right4.down
+      assert(done(down1))
+    }
+  }
+
+  test("level 0 neighborsWithHistory") {
+    new Level0 {
+      val result0 = neighborsWithHistory(startBlock, List())
+      val expected0 = Set(
+        (Block(Pos(0, 1), Pos(0, 2)), List(Move.Right))
+      ).to(LazyList)
+      assertEquals(result0, expected0)
+
+      val result1 = neighborsWithHistory(
+        Block(Pos(0, 1), Pos(0, 2)), List(Move.Right))
+      val expected1 = Set(
+        (Block(Pos(0, 0), Pos(0, 0)), List(Move.Left, Move.Right)),
+        (Block(Pos(1, 1), Pos(1, 2)), List(Move.Down, Move.Right))
+      ).to(LazyList)
+      assertEquals(result1, expected1)
+
+      val result2 = neighborsWithHistory(
+        Block(Pos(1, 1), Pos(1, 2)), List(Move.Down, Move.Right))
+      val expected2 = Set(
+        (Block(Pos(0, 1), Pos(0, 2)), List(Move.Up, Move.Down, Move.Right)),
+        (Block(Pos(2, 1), Pos(2, 2)), List(Move.Down, Move.Down, Move.Right))
+      ).to(LazyList)
+      assertEquals(result2, expected2)
+    }
+  }
+
+  test("level 1 neighborsWithHistory") {
+    new Level1 {
+      val result0 = neighborsWithHistory(startBlock, List(Move.Left, Move.Up))
+      val expected0 = Set(
+        (Block(Pos(1, 2), Pos(1, 3)), List(Move.Right, Move.Left, Move.Up)),
+        (Block(Pos(2, 1), Pos(3, 1)), List(Move.Down, Move.Left, Move.Up))
+      ).to(LazyList)
+      assertEquals(result0, expected0)
+
+      val result1 = neighborsWithHistory(
+        Block(Pos(1, 2), Pos(1, 3)), List(Move.Right))
+      val expected1 = Set(
+        (Block(Pos(1, 1), Pos(1, 1)), List(Move.Left, Move.Right)),
+        (Block(Pos(1, 4), Pos(1, 4)), List(Move.Right, Move.Right)),
+        (Block(Pos(2, 2), Pos(2, 3)), List(Move.Down, Move.Right))
+      ).to(LazyList)
+      assertEquals(result1, expected1)
+
+      val result2 = neighborsWithHistory(
+        Block(Pos(2, 5), Pos(3, 5)), List(Move.Right, Move.Down))
+      val expected2 = Set(
+        (Block(Pos(2, 4), Pos(3, 4)), List(Move.Left, Move.Right, Move.Down)),
+        (Block(Pos(1, 5), Pos(1, 5)), List(Move.Up, Move.Right, Move.Down)),
+        (Block(Pos(2, 6), Pos(3, 6)), List(Move.Right, Move.Right, Move.Down)),
+        (Block(Pos(4, 5), Pos(4, 5)), List(Move.Down, Move.Right, Move.Down))
+      ).to(LazyList)
+      assertEquals(result2, expected2)
+    }
+  }
+
 
   test("optimal solution for level 1 (5pts)") {
     new Level1:
