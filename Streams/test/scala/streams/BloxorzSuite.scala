@@ -410,6 +410,66 @@ class BloxorzSuite extends munit.FunSuite:
     }
   }
 
+  test("new neighbors only level 0") {
+    new Level0 {
+      val neighbors0 = Set(
+        (Block(Pos(0, 1), Pos(0, 2)), List(Move.Right))
+      ).to(LazyList)
+      val explored0 : Set[Block] = Set()
+      assertEquals(newNeighborsOnly(neighbors0, explored0), neighbors0)
+
+      val neighbors1 = Set(
+        (Block(Pos(0, 0), Pos(0, 0)), List(Move.Left, Move.Right)),
+        (Block(Pos(1, 1), Pos(1, 2)), List(Move.Down, Move.Right))
+      ).to(LazyList)
+      val explored1 = Set(Block(Pos(2, 2), Pos(2, 2)), Block(Pos(0, 2), Pos(1, 2)))
+      assertEquals(newNeighborsOnly(neighbors1, explored1), neighbors1)
+
+      val neighbors2 = Set(
+        (Block(Pos(0, 1), Pos(0, 2)), List(Move.Up, Move.Down, Move.Right)),
+        (Block(Pos(2, 1), Pos(2, 2)), List(Move.Down, Move.Down, Move.Right))
+      ).to(LazyList)
+      val explored2 = Set(
+        Block(Pos(0, 0), Pos(0, 0)),
+        Block(Pos(0, 1), Pos(0, 2)),
+        Block(Pos(2, 1), Pos(2, 2)))
+      val expected2 : LazyList[(Block, List[Move])] = LazyList()
+      assertEquals(newNeighborsOnly(neighbors2, explored2), expected2)
+    }
+  }
+
+  test("new neighbors only level 1") {
+    new Level1 {
+      val neighbors0 = Set(
+        (Block(Pos(1, 2), Pos(1, 3)), List(Move.Right, Move.Left, Move.Up)),
+        (Block(Pos(2, 1), Pos(3, 1)), List(Move.Down, Move.Left, Move.Up))
+      ).to(LazyList)
+      val explored0 = Set(
+        Block(Pos(1, 2), Pos(1, 3)),
+        Block(Pos(1, 1), Pos(1, 1)))
+      val expected0 = Set(
+        (Block(Pos(2, 1), Pos(3, 1)), List(Move.Down, Move.Left, Move.Up))
+      ).to(LazyList)
+      assertEquals(newNeighborsOnly(neighbors0, explored0), expected0)
+
+      val neighbors1 = Set(
+        (Block(Pos(2, 4), Pos(3, 4)), List(Move.Left, Move.Right, Move.Down)),
+        (Block(Pos(1, 5), Pos(1, 5)), List(Move.Up, Move.Right, Move.Down)),
+        (Block(Pos(2, 6), Pos(3, 6)), List(Move.Right, Move.Right, Move.Down)),
+        (Block(Pos(4, 5), Pos(4, 5)), List(Move.Down, Move.Right, Move.Down))
+      ).to(LazyList)
+      val explored1 = Set(
+        Block(Pos(1, 5), Pos(1, 5)),
+        Block(Pos(2, 6), Pos(3, 6)),
+        Block(Pos(4, 5), Pos(4, 6)))
+      val expected1 = Set(
+        (Block(Pos(2, 4), Pos(3, 4)), List(Move.Left, Move.Right, Move.Down)),
+        (Block(Pos(4, 5), Pos(4, 5)), List(Move.Down, Move.Right, Move.Down))
+      ).to(LazyList)
+      assertEquals(newNeighborsOnly(neighbors1, explored1), expected1)
+    }
+  }
+
 
   test("optimal solution for level 1 (5pts)") {
     new Level1:
