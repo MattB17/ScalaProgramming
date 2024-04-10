@@ -33,6 +33,12 @@ class BloxorzSuite extends munit.FunSuite:
     val optSolution = List(Right, Down, Down, Left)
   }
 
+  // An infeasible level
+  trait LevelI extends SolutionChecker {
+    val level =
+      """S-T""".stripMargin
+  }
+
   trait Level1 extends SolutionChecker {
     /* terrain for level 1*/
 
@@ -47,6 +53,14 @@ class BloxorzSuite extends munit.FunSuite:
     import Move.*
 
     val optsolution = List(Right, Right, Down, Right, Right, Right, Down)
+  }
+
+  test("terrain function infeasible level") {
+    new LevelI {
+      assert(terrain(Pos(0, 0)), "0,0")
+      assert(!terrain(Pos(0, 1)), "0,1")
+      assert(terrain(Pos(0, 2)), "0,2")
+    }
   }
 
   test("terrain function level 0") {
@@ -78,6 +92,13 @@ class BloxorzSuite extends munit.FunSuite:
       assert(!terrain(Pos(0,-1)), "0,-1")
     }
 
+  test("find char infeasible level") {
+    new LevelI {
+      assertEquals(startPos, Pos(0, 0))
+      assertEquals(goal, Pos(0, 2))
+    }
+  }
+
   test("find char level 0") {
     new Level0 {
       assertEquals(startPos, Pos(0, 0))
@@ -88,6 +109,13 @@ class BloxorzSuite extends munit.FunSuite:
   test("find char level 1 (10pts)") {
     new Level1:
       assertEquals(startPos, Pos(1, 1))
+  }
+
+  test("Infeasible level start block") {
+    new LevelI {
+      assert(startBlock.isStanding)
+      assert(startBlock.isLegal)
+    }
   }
 
   test("level 0 start block") {
@@ -101,6 +129,26 @@ class BloxorzSuite extends munit.FunSuite:
     new Level1 {
       assert(startBlock.isStanding)
       assert(startBlock.isLegal)
+    }
+  }
+
+  test("infeasible level moves") {
+    new LevelI {
+      val left0 : Block = startBlock.left
+      assert(!left0.isStanding)
+      assert(!left0.isLegal)
+
+      val up0 : Block = startBlock.up
+      assert(!up0.isStanding)
+      assert(!up0.isLegal)
+
+      val right0 : Block = startBlock.right
+      assert(!right0.isStanding)
+      assert(!right0.isLegal)
+
+      val down0 : Block = startBlock.down
+      assert(!down0.isStanding)
+      assert(!down0.isLegal)
     }
   }
 
@@ -182,6 +230,17 @@ class BloxorzSuite extends munit.FunSuite:
       val down1 : Block = right4.down
       assert(down1.isStanding)
       assert(down1.isLegal)
+    }
+  }
+
+  test("infeasible level neighbors") {
+    new LevelI {
+      assertEquals(startBlock.neighbors,
+        List((startBlock.left, Move.Left),
+             (startBlock.up, Move.Up),
+             (startBlock.right, Move.Right),
+             (startBlock.down, Move.Down)))
+      assertEquals(startBlock.legalNeighbors, List())
     }
   }
 
@@ -298,6 +357,12 @@ class BloxorzSuite extends munit.FunSuite:
         List((right4.left, Move.Left),
           (right4.right, Move.Right),
           (right4.down, Move.Down)))
+    }
+  }
+
+  test("Infeasible level done") {
+    new LevelI {
+      assert(!done(startBlock))
     }
   }
 
@@ -467,6 +532,12 @@ class BloxorzSuite extends munit.FunSuite:
         (Block(Pos(4, 5), Pos(4, 5)), List(Move.Down, Move.Right, Move.Down))
       ).to(LazyList)
       assertEquals(newNeighborsOnly(neighbors1, explored1), expected1)
+    }
+  }
+
+  test("optimal solution for infeasible level") {
+    new LevelI {
+      assertEquals(solution.length, 0)
     }
   }
 
