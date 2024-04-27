@@ -214,7 +214,14 @@ trait DecoderInstances:
     * the supplied `name` using the given `decoder`.
     */
   def field[A](name: String)(using decoder: Decoder[A]): Decoder[A] =
-    ???
+    Decoder.fromPartialFunction {
+      case Json.Obj(f) => {
+        decoder.decode(f(name)) match {
+          case Some(o) => o
+          case None => throw IllegalArgumentException("Not an instance of the given type")
+        }
+      }
+    }
 
 
 case class Person(name: String, age: Int)
@@ -230,8 +237,13 @@ trait PersonCodecs:
       .transform[Person](user => (user.name, user.age))
 
   /** The corresponding decoder for `Person` */
-  given Decoder[Person] =
-    ???
+  given Decoder[Person] = {
+    val nameDecoder = Decoder.field[String]("name")
+    val ageDecoder = Decoder.field[Int]("age")
+    nameDecoder
+      .zip(ageDecoder)
+      .transform[Person](a => Person(a._1, a._2))
+  }
 
 
 case class Contacts(people: List[Person])

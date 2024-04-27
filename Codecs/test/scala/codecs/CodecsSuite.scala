@@ -71,6 +71,24 @@ class CodecsSuite
     checkProperty(Prop.forAll((xs: List[Int]) => encodeAndThenDecodeProp(xs)))
   }
 
+  test("it is possible to encode and decode an Int field") {
+    val xField = ObjectEncoder.field[Int]("x")
+    val encoded = xField.encode(42)
+    assert(field[Int]("x").decode(encoded).contains(42))
+  }
+
+  test("it is possible to encode and decode a Boolean field") {
+    val bField = ObjectEncoder.field[Boolean]("b")
+    val encoded = bField.encode(true)
+    assert(field[Boolean]("b").decode(encoded).contains(true))
+  }
+
+  test("it is possible to encode and decode a String field") {
+    val sField = ObjectEncoder.field[String]("s")
+    val encoded = sField.encode("testString")
+    assert(field[String]("s").decode(encoded).contains("testString"))
+  }
+
   test("a 'Person' value should be encoded as a JSON object (1pt)") {
     val person = Person("Alice", 42)
     val json = Json.Obj(Map("name" -> Json.Str("Alice"), "age" -> Json.Num(42)))
