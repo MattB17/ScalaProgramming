@@ -252,11 +252,20 @@ object Contacts extends ContactsCodecs
 
 trait ContactsCodecs:
 
-  // TODO Define the encoder and the decoder for `Contacts`
   // The JSON representation of a value of type `Contacts` should be
   // a JSON object with a single field named “people” containing an
   // array of values of type `Person` (reuse the `Person` codecs)
-  ()
+  given Encoder[Contacts] = {
+    ObjectEncoder
+      .field[List[Person]]("people")
+      .transform[Contacts](xs => xs.people)
+  }
+
+  // The corresponding decoder for `Contacts`
+  given Decoder[Contacts] =
+    Decoder
+      .field[List[Person]]("people")
+      .transform[Contacts](xs => Contacts(xs))
 
 
 // In case you want to try your code, here is a simple `Main`
@@ -275,7 +284,7 @@ object Main:
     // Uncomment the following lines as you progress in the assignment
     println(maybeJsonString.flatMap(_.decodeAs[Int]))
     println(maybeJsonString.flatMap(_.decodeAs[String]))
-    // println(maybeJsonObj.flatMap(_.decodeAs[Person]))
+    println(maybeJsonObj.flatMap(_.decodeAs[Person]))
     // println(maybeJsonObj2.flatMap(_.decodeAs[Person]))
-    // println(renderJson(Person("Bob", 66)))
+    println(renderJson(Person("Bob", 66)))
 
