@@ -55,6 +55,21 @@ class CalculatorSuite extends munit.FunSuite:
     assertEquals(resultRed2.currentValue, "red")
   }
 
+  test("colorForRemainingCharsCount should follow the input signal") {
+    val input = Var("hello world")
+    val result = tweetRemainingCharsCount(input)
+    val colorResult = colorForRemainingCharsCount(result)
+    assertEquals(colorResult.currentValue, "green")
+
+    input() = ("hello world this is a scala program about creating a calculator with use of scala's signal " +
+               "API this is a coursera assignment as part")
+    assertEquals(colorResult.currentValue, "orange")
+
+    input() = ("hello world this is a scala program about creating a calculator with use of scala's signal " +
+               "API this is a coursera assignment as part of the scala functional program design course")
+    assertEquals(colorResult.currentValue, "red")
+  }
+
 
   /****************
    ** POLYNOMIAL **
