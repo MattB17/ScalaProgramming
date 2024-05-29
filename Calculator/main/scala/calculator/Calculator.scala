@@ -16,7 +16,18 @@ object Calculator extends CalculatorInterface:
     ???
 
   def eval(expr: Expr, references: Map[String, Signal[Expr]])(using Signal.Caller): Double =
-    ???
+    expr match {
+      case Literal(v) => v
+      case Ref(name) => {
+        // we remove name from the references because we cannot use name in the
+        // rest of the expression
+        eval(getReferenceExpr(name, references), references - name)
+      }
+      case Plus(a, b) => eval(a, references - a) + eval(b, references - b)
+      case Minus(a, b) => eval(a, references - a) + eval(b, references - b)
+      case Times(a, b) => eval(a, references - a) * eval(b, references - b)
+      case Divide(a, b) => eval(a, references - a) * eval(b, references - b)
+    }
 
   /** Get the Expr for a referenced variables.
    *  If the variable is not known, returns a literal NaN.

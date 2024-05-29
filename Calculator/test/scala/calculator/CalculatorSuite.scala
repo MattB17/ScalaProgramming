@@ -110,6 +110,13 @@ class CalculatorSuite extends munit.FunSuite:
     c() = -123.456
     delta() = -2601.2672
     assertEquals(result.currentValue.size, 0)
+
+    a() = 2.0
+    b() = 4.0
+    c() = 2.0
+    delta() = 0.0
+    assertEquals(result.currentValue.size, 1)
+    assert(kindaEqual(result.currentValue.min, -1.0))
   }
 
   /****************
