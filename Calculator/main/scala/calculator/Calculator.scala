@@ -23,10 +23,10 @@ object Calculator extends CalculatorInterface:
         // rest of the expression
         eval(getReferenceExpr(name, references), references - name)
       }
-      case Plus(a, b) => eval(a, references - a) + eval(b, references - b)
-      case Minus(a, b) => eval(a, references - a) + eval(b, references - b)
-      case Times(a, b) => eval(a, references - a) * eval(b, references - b)
-      case Divide(a, b) => eval(a, references - a) * eval(b, references - b)
+      case Plus(a, b) => eval(a, references) + eval(b, references)
+      case Minus(a, b) => eval(a, references) - eval(b, references)
+      case Times(a, b) => eval(a, references) * eval(b, references)
+      case Divide(a, b) => eval(a, references) / eval(b, references)
     }
 
   /** Get the Expr for a referenced variables.

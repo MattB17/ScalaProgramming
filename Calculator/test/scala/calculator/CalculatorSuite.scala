@@ -125,6 +125,44 @@ class CalculatorSuite extends munit.FunSuite:
 
   import Calculator.*
 
+  test("eval with literal") {
+    val e = Literal(1)
+    val m: Map[String, Signal[Expr]] = Map()
+    val output = Signal(eval(e, m))
+    assert(output.currentValue == 1, " - Literals should evaluate to themselves")
+  }
+
+  test("eval with plus") {
+    val e = Plus(Ref("a"), Ref("b"))
+    val m: Map[String, Signal[Expr]] = Map(
+      "a" -> Signal[Expr](Literal(2)),
+      "b" -> Signal[Expr](Plus(Ref("a"), Literal(1))))
+    val output = Signal(eval(e, m))
+    assert(output.currentValue == 5, " - Simple addition")
+
+    // b is not in the map so it should return NaN
+    val m2: Map[String, Signal[Expr]] = Map("a" -> Signal[Expr](Literal(2)))
+    val output2 = Signal(eval(e, m2))
+    assert(output2.currentValue.isNaN, " - Addition with invalid operands")
+  }
+
+  test("eval complicated") {
+    val e = Minus(Ref("a"), Ref("b"))
+    val m: Map[String, Signal[Expr]] = Map(
+      "a" -> Signal[Expr](Times(Ref("c"), Ref("d"))),
+      "b" -> Signal[Expr](Divide(Ref("c"), Ref("e"))),
+      "c" -> Signal[Expr](Literal(10)),
+      "d" -> Signal[Expr](Times(Ref("f"), Literal(3))),
+      "e" -> Signal[Expr](Plus(Ref("f"), Literal(1))),
+      "f" -> Signal[Expr](Literal(1)))
+    val output = Signal(eval(e, m))
+    // f has value 1, e has value f + 1 = 2, d has value f * 3 = 3,
+    // c has value 10, b has value c / e = 10 / 2 = 5, a has value c * d = 10 * 3 = 30,
+    // so the expression has value a - b = 30 - 5 = 25.
+    // We use kindaEqual because the division might give a floating point number.
+    assert(kindaEqual(output.currentValue, 25), "- Complicated eval expression")
+  }
+
   // test cases for calculator
   test("Self dependency") {
     val input = Map("a" -> Signal[Expr](Plus(Ref("a"), Literal(1))),
