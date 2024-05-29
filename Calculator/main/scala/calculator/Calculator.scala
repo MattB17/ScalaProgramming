@@ -13,7 +13,9 @@ object Calculator extends CalculatorInterface:
 
   def computeValues(
       namedExpressions: Map[String, Signal[Expr]]): Map[String, Signal[Double]] =
-    ???
+    namedExpressions.map(
+      (varName, exprSignal) =>
+        varName -> Signal(eval(exprSignal(), namedExpressions - varName)))
 
   def eval(expr: Expr, references: Map[String, Signal[Expr]])(using Signal.Caller): Double =
     expr match {
