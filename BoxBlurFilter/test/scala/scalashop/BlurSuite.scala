@@ -27,7 +27,69 @@ class BlurSuite extends munit.FunSuite:
     src(2, 2) = 50
 
 
+    // The sum of each pixel divided by 9
     assert(boxBlurKernel(src, 1, 1, 1) == 10)
-    assert(boxBlurKernel(src, 0, 1, 1) == 2)
-    assert(boxBlurKernel(src, 1, 0, 1) == 4)
+
+    // We'll sum the left column twice (because (-1, y) will be (0, y))
+    // so its (0,0) + (0,1) + (0, 2) + (1,0) + (1,1) + (1,2)
+    // all divided by 6
+    assert(boxBlurKernel(src, 0, 1, 1) == 3)
+
+    // We'll sum the top row twice (because (x, -1) will be clamped to (x, 0))
+    // so its (0,0) + (1,0) + (2,0) + (0,1) + (1,1) + (2,1)
+    // all divided by 6
+    assert(boxBlurKernel(src, 1, 0, 1) == 5)
+
+    // (3,2), (3,3), (2,3) and (2,2) will all be clamped to (2, 2),
+    // (2, 1) and (3, 1) will be clamped to (2, 1),
+    // (1, 2) and (1, 3) will be clamped to (1, 2)
+    // so it's (2,2) + (2,1) + (1,2) + (1,1) all divided by 4
+    assert(boxBlurKernel(src, 2, 2, 1) == 18)
+  }
+
+  test("boxBlurKernel should return correct value of interior edge pixel") {
+    val src = new Img(3, 4)
+    src(0, 0) = 0
+    src(1, 0) = 1
+    src(2, 0) = 2
+    src(0, 1) = 3
+    src(1, 1) = 4
+    src(2, 1) = 5
+    src(0, 2) = 6
+    src(1, 2) = 7
+    src(2, 2) = 8
+    src(0, 3) = 50
+    src(1, 3) = 11
+    src(2, 3) = 16
+
+    assert(boxBlurKernel(src, 0, 2, 1) == 13)
+  }
+
+  test("VerticalBoxBlur.blur with radius 0 should copy the strip") {
+    val src = new Img(7, 7)
+    val dst = new Img(7, 7)
+
+    for (x <- 0 until 7; y <- 0 until 7)
+      src(x, y) = rgba(x + 5, y * 2, x * y, (x * x) + (y * y))
+
+    VerticalBoxBlur.blur(src, dst, 0, 2, 0)
+
+    for (x <- 0 until 2; y <- 0 until 7)
+      assert(dst(x, y) == src(x, y))
+
+    for (x <- 2 until 7; y <- 0 until 7)
+      assert(dst(x, y) == 0)
+  }
+
+  test("VerticalBoxBlur.parBlur with radius 0 should copy the whole image") {
+    val src = new Img(7, 7)
+    val dst = new Img(7, 7)
+
+    for (x <- 0 until 7; y <- 0 until 7)
+      src(x, y) = rgba(x + 5, y * 2, x * y, (x * x) + (y * y))
+
+    VerticalBoxBlur.parBlur(src, dst, 4, 0)
+
+    for (x <- 0 until 7; y <- 0 until 7)
+      assert(dst(x, y) == src(x, y))
   }

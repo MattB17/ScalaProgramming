@@ -50,16 +50,18 @@ class Img(val width: Int, val height: Int, private val data: Array[RGBA]):
 
 /** Computes the blurred RGBA value of a single pixel of the input image. */
 def boxBlurKernel(src: Img, x: Int, y: Int, radius: Int): RGBA = {
-  val srcWidth = src.width
-  val srcHeight = src.height
+  val xMin = clamp(x - radius, 0, src.width - 1)
+  val xMax = clamp(x + radius, 0, src.width - 1)
+  val yMin = clamp(y - radius, 0, src.height - 1)
+  val yMax = clamp(y + radius, 0, src.height - 1)
 
   var redSum, greenSum, blueSum, alphaSum, pxCount = 0L
-  var currX = x - radius
-  var currY = y - radius
+  var currX = xMin
+  var currY = yMin
 
-  while (currX <= x + radius) {
-    while (currY <= y + radius) {
-      val currPx = src(clamp(currX, 0, srcWidth), clamp(currY, 0, srcHeight))
+  while (currX <= xMax) {
+    while (currY <= yMax) {
+      val currPx = src(currX, currY)
       redSum += red(currPx)
       greenSum += green(currPx)
       blueSum += blue(currPx)
@@ -68,7 +70,7 @@ def boxBlurKernel(src: Img, x: Int, y: Int, radius: Int): RGBA = {
       currY += 1
     }
     currX += 1
-    currY = y - radius
+    currY = yMin
   }
   rgba(
     (redSum / pxCount).toInt,
