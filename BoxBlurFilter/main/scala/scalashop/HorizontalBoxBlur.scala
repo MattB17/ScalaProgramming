@@ -37,9 +37,21 @@ object HorizontalBoxBlur extends HorizontalBoxBlurInterface:
    *
    *  Within each row, `blur` traverses the pixels by going from left to right.
    */
-  def blur(src: Img, dst: Img, from: Int, end: Int, radius: Int): Unit =
-    // TODO implement this method using the `boxBlurKernel` method
-    ???
+  def blur(src: Img, dst: Img, from: Int, end: Int, radius: Int): Unit = {
+    val yMin = clamp(from, 0, src.height)
+    val yMax = clamp(end, 0, src.height)
+
+    var currY = yMin
+    var currX = 0
+    while (currY < yMax) {
+      while (currX < src.width) {
+        dst(currX, currY) = boxBlurKernel(src, currX, currY, radius)
+        currX += 1
+      }
+      currY += 1
+      currX = 0
+    }
+  }
 
   /** Blurs the rows of the source image in parallel using `numTasks` tasks.
    *
@@ -47,7 +59,15 @@ object HorizontalBoxBlur extends HorizontalBoxBlurInterface:
    *  `numTasks` separate strips, where each strip is composed of some number of
    *  rows.
    */
-  def parBlur(src: Img, dst: Img, numTasks: Int, radius: Int): Unit =
-    // TODO implement using the `task` construct and the `blur` method
-    ???
+  def parBlur(src: Img, dst: Img, numTasks: Int, radius: Int): Unit = {
+    val stripHeight = math.max(1, math.ceil((src.height).toDouble / numTasks).toInt)
+    val fromToTuples = for
+      from <- 0 until src.height by stripHeight
+      end = math.min(from + stripHeight, src.height)
+    yield (from, end)
+
+    val blurTasks = fromToTuples
+      .map((f, e) => task(blur(src, dst, f, e, radius)))
+    blurTasks.foreach(t => t.join())
+  }
 
