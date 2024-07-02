@@ -167,6 +167,44 @@ class ReductionsSuite extends munit.FunSuite:
     check(").", false)
   }
 
+  test("parBalance should work for empty string") {
+    def check(input: String, expected: Boolean): Unit =
+      assert(parBalance(input.toArray, 1) == expected,
+        s"parBalance($input) should be $expected")
+
+    check("", true)
+  }
+
+  test("parBalance should work for string of length 1") {
+    def check(input: String, expected: Boolean): Unit =
+      assert(parBalance(input.toArray, 1) == expected,
+        s"parBalance($input) should be $expected")
+
+    check("(", false)
+    check(")", false)
+    check(".", true)
+  }
+
+  test("parBalance should work for string of length 2") {
+    def check(input: String, expected: Boolean): Unit =
+      assert(parBalance(input.toArray, 1) == expected,
+        s"balance($input) should be $expected")
+
+    check("()", true)
+    check(")(", false)
+    check("((", false)
+    check("))", false)
+    check(".)", false)
+    check(".(", false)
+    check("(.", false)
+    check(").", false)
+  }
+
+  test("parBalance should work for longer string") {
+    assert(!parBalance(")(t(_)l)".toArray, 1))
+    assert(parBalance("()fg(((0)lq))".toArray, 1))
+  }
+
 
   import scala.concurrent.duration.*
   override val munitTimeout = 10.seconds

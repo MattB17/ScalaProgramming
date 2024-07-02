@@ -37,22 +37,67 @@ object ParallelParenthesesBalancing extends ParallelParenthesesBalancingInterfac
 
   /** Returns `true` iff the parentheses in the input `chars` are balanced.
    */
-  def balance(chars: Array[Char]): Boolean =
-    ???
+  def balance(chars: Array[Char]): Boolean = {
+    @tailrec
+    def balanceHelper(currOpen: Int, currIdx: Int): Boolean = {
+      if (currIdx >= chars.length) {
+        // We've reached the end of the array, it's only balanced if there are no open parentheses
+        currOpen == 0
+      } else if (chars(currIdx) == '(') {
+        // Add to the number of open parentheses count
+        balanceHelper(currOpen + 1, currIdx + 1)
+      } else if (chars(currIdx) == ')') {
+        if (currOpen <= 0) {
+          return false
+        }
+        // Subtract from the number of open parentheses
+        balanceHelper(currOpen - 1, currIdx + 1)
+      } else {
+        // The current character is not a parenthesis, so just continue
+        balanceHelper(currOpen, currIdx + 1)
+      }
+    }
+
+    balanceHelper(0, 0)
+  }
 
   /** Returns `true` iff the parentheses in the input `chars` are balanced.
    */
   def parBalance(chars: Array[Char], threshold: Int): Boolean =
 
-    def traverse(idx: Int, until: Int, arg1: Int, arg2: Int) /*: ???*/ = {
-      ???
+    @tailrec
+    def traverse(idx: Int, until: Int, unmatchedLeft: Int, unmatchedRight: Int):  (Int, Int) = {
+      if (idx >= until) {
+        return (unmatchedLeft, unmatchedRight)
+      }
+      chars(idx) match {
+        case '(' => traverse(idx+1, until, unmatchedLeft + 1, unmatchedRight)
+        case ')' => {
+          if (unmatchedLeft > 0) {
+            traverse(idx+1, until, unmatchedLeft - 1, unmatchedRight)
+          } else {
+            traverse(idx + 1, until, unmatchedLeft, unmatchedRight + 1)
+          }
+        }
+        case _ => traverse(idx + 1, until, unmatchedLeft, unmatchedRight)
+      }
     }
 
-    def reduce(from: Int, until: Int) /*: ???*/ = {
-      ???
+    def reduce(from: Int, until: Int): (Int, Int) = {
+      if (until - from <= threshold) {
+        traverse(from, until, 0, 0)
+      } else {
+        val mid = from + ((until - from) / 2)
+        val ((uL1, uR1), (uL2, uR2)) = parallel(reduce(from, mid), reduce(mid, until))
+        if (uL1 > uR2) {
+          (uL1 - uR2 + uL2, uR1)
+        } else {
+          (uL2, uR1 + uR2 - uL1)
+        }
+      }
     }
 
-    reduce(0, chars.length) == ???
+    reduce(0, chars.length) == (0, 0)
 
   // For those who want more:
   // Prove that your reduction operator is associative!
