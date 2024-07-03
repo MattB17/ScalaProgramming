@@ -10,10 +10,29 @@ class ReductionsSuite extends munit.FunSuite:
    *****************/
 
   import LineOfSight.*
+
+  test("lineOfSight on 1 element array") {
+    val output = new Array[Float](1)
+    lineOfSight(Array[Float](3f), output)
+    assertEquals(output.toList, List(0f))
+  }
+
+  test("lineOfSight on 2 element array") {
+    val output = new Array[Float](2)
+    lineOfSight(Array[Float](0f, 3f), output)
+    assertEquals(output.toList, List(0f, 3f))
+  }
+
   test("lineOfSight should correctly handle an array of size 4") {
     val output = new Array[Float](4)
     lineOfSight(Array[Float](0f, 1f, 8f, 9f), output)
     assertEquals(output.toList, List(0f, 1f, 4f, 4f))
+  }
+
+  test("lineOfSight on changing terrain") {
+    val output = new Array[Float](10)
+    lineOfSight(Array[Float](0f, 1f, 4f, 5f, 3f, 15f, 15f, 7f, 9f, 54f), output)
+    assertEquals(output.toList, List(0f, 1f, 2f, 2f, 2f, 3f, 3f, 3f, 3f, 6f))
   }
 
 

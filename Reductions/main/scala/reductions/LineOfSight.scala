@@ -32,8 +32,19 @@ enum Tree(val maxPrevious: Float):
 
 object LineOfSight extends LineOfSightInterface:
 
-  def lineOfSight(input: Array[Float], output: Array[Float]): Unit =
-    ???
+  def lineOfSight(input: Array[Float], output: Array[Float]): Unit = {
+    output(0) = 0
+    var idx = 1
+    while (idx < input.length) {
+      val tangentAngle = input(idx) / idx
+      if (tangentAngle > output(idx - 1)) {
+        output(idx) = tangentAngle
+      } else {
+        output(idx) = output(idx - 1)
+      }
+      idx += 1
+    }
+  }
 
   /** Traverses the specified part of the array and returns the maximum angle.
    */
