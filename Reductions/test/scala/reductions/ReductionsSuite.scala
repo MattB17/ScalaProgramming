@@ -1,5 +1,7 @@
 package reductions
 
+import reductions.Tree.*
+
 import java.util.concurrent.*
 import scala.collection.*
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory
@@ -35,7 +37,51 @@ class ReductionsSuite extends munit.FunSuite:
     assertEquals(output.toList, List(0f, 1f, 2f, 2f, 2f, 3f, 3f, 3f, 3f, 6f))
   }
 
+  test("upsweepSequential with 1 element array") {
+    assertEquals(upsweepSequential(Array[Float](3f), 0, 1), 0f)
+  }
 
+  test("upsweepSequential on 2 element array") {
+    assertEquals(upsweepSequential(Array[Float](0f, 3f), 0, 2), 3f)
+  }
+
+  test("upsweepSequential on subset of the array") {
+    assertEquals(upsweepSequential(Array[Float](0f, 1f, 4f, 5f, 3f, 15f, 15f, 7f, 9f, 54f), 1, 6), 3f)
+  }
+
+  test("upsweep on 1 element array") {
+    val input = Array[Float](3f)
+    val result = upsweep(input, 0, 1, 2)
+    assertEquals(result, Leaf(0, 1, 0f))
+  }
+
+  test("upsweep on 2 element array") {
+    val input = Array[Float](0f, 3f)
+    val result = upsweep(input, 0, 2, 2)
+    assertEquals(result, Node(Leaf(0, 1, 0f), Leaf(1, 2, 3f)))
+  }
+
+  test("upsweep on 4 element array") {
+    val input = Array[Float](0f, 1f, 8f, 9f)
+    val t0 = Node(Leaf(0, 1, 0f), Leaf(1, 2, 1f))
+    val t1 = Node(Leaf(2, 3, 4f), Leaf(3, 4, 3f))
+    val result = upsweep(input, 0, 4, 2)
+    assertEquals(result, Node(t0, t1))
+  }
+
+  test("upsweep on 10 element array") {
+    val input = Array[Float](0f, 1f, 4f, 6f, 4f, 15f, 12f, 7f, 8f, 54f)
+    val t0 = Node(Leaf(0, 1, 0f), Leaf(1, 2, 1f))
+    val t1 = Node(Leaf(3, 4, 2f), Leaf(4, 5, 1f))
+    val t2 = Node(Leaf(2, 3, 2f), t1)
+    val t3 = Node(Leaf(5, 6, 3f), Leaf(6, 7, 2f))
+    val t4 = Node(Leaf(8, 9, 1f), Leaf(9, 10, 6f))
+    val t5 = Node(Leaf(7, 8, 1f), t4)
+    val t6 = Node(t0, t2)
+    val t7 = Node(t3, t5)
+    val result = upsweep(input, 0, 10, 2)
+    assertEquals(result, Node(t6, t7))
+  }
 
 
   /*******************************

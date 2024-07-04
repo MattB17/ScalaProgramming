@@ -48,8 +48,18 @@ object LineOfSight extends LineOfSightInterface:
 
   /** Traverses the specified part of the array and returns the maximum angle.
    */
-  def upsweepSequential(input: Array[Float], from: Int, until: Int): Float =
-    ???
+  def upsweepSequential(input: Array[Float], from: Int, until: Int): Float = {
+    var maxAngle = 0f
+    if (from != 0) {
+      maxAngle = input(from) / from
+    }
+    var idx = from + 1
+    while (idx < until) {
+      maxAngle = maxAngle.max(input(idx) / idx)
+      idx += 1
+    }
+    maxAngle
+  }
 
   /** Traverses the part of the array starting at `from` and until `end`, and
    *  returns the reduction tree for that part of the array.
@@ -59,9 +69,15 @@ object LineOfSight extends LineOfSightInterface:
    *  If the specified part of the array is longer than `threshold`, then the
    *  work is divided and done recursively in parallel.
    */
-  def upsweep(input: Array[Float], from: Int, end: Int,
-    threshold: Int): Tree =
-    ???
+  def upsweep(input: Array[Float], from: Int, end: Int, threshold: Int): Tree = {
+    if (end - from < threshold) {
+      Tree.Leaf(from, end, upsweepSequential(input, from, end))
+    } else {
+      val mid = from + ((end - from) / 2)
+      val (tL, tR) = parallel(upsweep(input, from, mid, threshold), upsweep(input, mid, end, threshold))
+      Tree.Node(tL, tR)
+    }
+  }
 
   /** Traverses the part of the `input` array starting at `from` and until
    *  `until`, and computes the maximum angle for each entry of the output array,
