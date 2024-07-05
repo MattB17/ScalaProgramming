@@ -37,64 +37,60 @@ class ReductionsSuite extends munit.FunSuite:
     assertEquals(output.toList, List(0f, 1f, 2f, 2f, 2f, 3f, 3f, 3f, 3f, 6f))
   }
 
-  test("upsweepSequential with 1 element array") {
-    assertEquals(upsweepSequential(Array[Float](3f), 0, 1), 0f)
-  }
-
   test("upsweepSequential on 2 element array") {
-    assertEquals(upsweepSequential(Array[Float](0f, 3f), 0, 2), 3f)
+    assertEquals(upsweepSequential(Array[Float](0f, 3f), 1, 2), 3f)
   }
 
   test("upsweepSequential on subset of the array") {
     assertEquals(upsweepSequential(Array[Float](0f, 1f, 4f, 5f, 3f, 15f, 15f, 7f, 9f, 54f), 1, 6), 3f)
   }
 
-  test("upsweep on 1 element array") {
-    val input = Array[Float](3f)
-    val result = upsweep(input, 0, 1, 2)
-    assertEquals(result, Leaf(0, 1, 0f))
-  }
-
   test("upsweep on 2 element array") {
     val input = Array[Float](0f, 3f)
-    val result = upsweep(input, 0, 2, 2)
-    assertEquals(result, Node(Leaf(0, 1, 0f), Leaf(1, 2, 3f)))
+    val result = upsweep(input, 1, 2, 1)
+    assertEquals(result, Leaf(1, 2, 3f))
   }
 
-  test("upsweep on 4 element array") {
-    val input = Array[Float](0f, 1f, 8f, 9f)
-    val t0 = Node(Leaf(0, 1, 0f), Leaf(1, 2, 1f))
-    val t1 = Node(Leaf(2, 3, 4f), Leaf(3, 4, 3f))
-    val result = upsweep(input, 0, 4, 2)
+  test("upsweep on 3 element array") {
+    val input = Array[Float](0f, 0f, 6f)
+    val result = upsweep(input, 1, 3, 1)
+    assertEquals(result, Node(Leaf(1, 2, 0f), Leaf(2, 3, 3f)))
+  }
+
+  test("upsweep on 5 element array") {
+    val input = Array[Float](0f, 0f, 2f, 12f, 12f)
+    val t0 = Node(Leaf(1, 2, 0f), Leaf(2, 3, 1f))
+    val t1 = Node(Leaf(3, 4, 4f), Leaf(4, 5, 3f))
+    val result = upsweep(input, 1, 5, 1)
     assertEquals(result, Node(t0, t1))
   }
 
-  test("upsweep on 10 element array") {
-    val input = Array[Float](0f, 1f, 4f, 6f, 4f, 15f, 12f, 7f, 8f, 54f)
-    val t0 = Node(Leaf(0, 1, 0f), Leaf(1, 2, 1f))
-    val t1 = Node(Leaf(3, 4, 2f), Leaf(4, 5, 1f))
-    val t2 = Node(Leaf(2, 3, 2f), t1)
-    val t3 = Node(Leaf(5, 6, 3f), Leaf(6, 7, 2f))
-    val t4 = Node(Leaf(8, 9, 1f), Leaf(9, 10, 6f))
-    val t5 = Node(Leaf(7, 8, 1f), t4)
+  test("upsweep on 11 element array") {
+    val input = Array[Float](0f, 0f, 2f, 6f, 8f, 5f, 18f, 14f, 8f, 9f, 60f)
+    val t0 = Node(Leaf(1, 2, 0f), Leaf(2, 3, 1f))
+    val t1 = Node(Leaf(4, 5, 2f), Leaf(5, 6, 1f))
+    val t2 = Node(Leaf(3, 4, 2f), t1)
+    val t3 = Node(Leaf(6, 7, 3f), Leaf(7, 8, 2f))
+    val t4 = Node(Leaf(9, 10, 1f), Leaf(10, 11, 6f))
+    val t5 = Node(Leaf(8, 9, 1f), t4)
     val t6 = Node(t0, t2)
     val t7 = Node(t3, t5)
-    val result = upsweep(input, 0, 10, 2)
+    val result = upsweep(input, 1, 11, 1)
     assertEquals(result, Node(t6, t7))
-  }
-
-  test("downsweepSequential on 1 element array") {
-    val output = new Array[Float](1)
-    val input = Array[Float](3f)
-    downsweepSequential(input, output, 2f, 0, 1)
-    assertEquals(output.toList, List(2f))
   }
 
   test("downsweepSequential on 2 element array") {
     val output = new Array[Float](2)
     val input = Array[Float](0f, 3f)
-    downsweepSequential(input, output, 0f, 0, 2)
+    downsweepSequential(input, output, 2f, 1, 2)
     assertEquals(output.toList, List(0f, 3f))
+  }
+
+  test("downsweepSequential on 3 element array") {
+    val output = new Array[Float](3)
+    val input = Array[Float](0f, 0f, 6f)
+    downsweepSequential(input, output, 0f, 1, 3)
+    assertEquals(output.toList, List(0f, 0f, 3f))
   }
 
   test("downsweepSequential on subset of 4 element array") {
@@ -112,68 +108,68 @@ class ReductionsSuite extends munit.FunSuite:
   }
 
   test("downsweep on leaf") {
-    val output = new Array[Float](1)
-    val input = Array[Float](3f)
-    val t = Leaf(0, 1, 0f)
-    downsweep(input, output, 0f, t)
-    assertEquals(output.toList, List(0f))
-  }
-
-  test("downsweep on 1 level tree") {
     val output = new Array[Float](2)
     val input = Array[Float](0f, 3f)
-    val t = Node(Leaf(0, 1, 0f), Leaf(1, 2, 3f))
+    val t = Leaf(1, 2, 3f)
     downsweep(input, output, 0f, t)
     assertEquals(output.toList, List(0f, 3f))
   }
 
+  test("downsweep on 1 level tree") {
+    val output = new Array[Float](3)
+    val input = Array[Float](0f, 0f, 6f)
+    val t = Node(Leaf(1, 2, 0f), Leaf(2, 3, 3f))
+    downsweep(input, output, 0f, t)
+    assertEquals(output.toList, List(0f, 0f, 3f))
+  }
+
   test("downsweep on 2 level tree") {
-    val output = new Array[Float](4)
-    val input = Array[Float](0f, 1f, 8f, 9f)
-    val t0 = Node(Leaf(0, 1, 0f), Leaf(1, 2, 1f))
-    val t1 = Node(Leaf(2, 3, 4f), Leaf(3, 4, 3f))
+    val output = new Array[Float](5)
+    val input = Array[Float](0f, 0f, 2f, 12f, 12f)
+    val t0 = Node(Leaf(1, 2, 0f), Leaf(2, 3, 1f))
+    val t1 = Node(Leaf(3, 4, 4f), Leaf(4, 5, 3f))
     val t = Node(t0, t1)
     downsweep(input, output, 0f, t)
-    assertEquals(output.toList, List(0f, 1f, 4f, 4f))
+    assertEquals(output.toList, List(0f, 0f, 1f, 4f, 4f))
   }
 
   test("downsweep on complex tree") {
-    val output = new Array[Float](10)
-    val input = Array[Float](0f, 1f, 4f, 6f, 4f, 15f, 12f, 7f, 8f, 54f)
-    val t0 = Node(Leaf(0, 1, 0f), Leaf(1, 2, 1f))
-    val t1 = Node(Leaf(3, 4, 2f), Leaf(4, 5, 1f))
-    val t2 = Node(Leaf(2, 3, 2f), t1)
-    val t3 = Node(Leaf(5, 6, 3f), Leaf(6, 7, 2f))
-    val t4 = Node(Leaf(8, 9, 1f), Leaf(9, 10, 6f))
-    val t5 = Node(Leaf(7, 8, 1f), t4)
+    val output = new Array[Float](11)
+    val input = Array[Float](0f, 0f, 2f, 6f, 8f, 5f, 18f, 14f, 8f, 9f, 60f)
+    val t0 = Node(Leaf(1, 2, 0f), Leaf(2, 3, 1f))
+    val t1 = Node(Leaf(4, 5, 2f), Leaf(5, 6, 1f))
+    val t2 = Node(Leaf(3, 4, 2f), t1)
+    val t3 = Node(Leaf(6, 7, 3f), Leaf(7, 8, 2f))
+    val t4 = Node(Leaf(9, 10, 1f), Leaf(10, 11, 6f))
+    val t5 = Node(Leaf(8, 9, 1f), t4)
     val t6 = Node(t0, t2)
     val t7 = Node(t3, t5)
     val t = Node(t6, t7)
     downsweep(input, output, 0f, t)
-    assertEquals(output.toList, List(0f, 1f, 2f, 2f, 2f, 3f, 3f, 3f, 3f, 6f))
+    assertEquals(output.toList, List(0f, 0f, 1f, 2f, 2f, 2f, 3f, 3f, 3f, 3f, 6f))
   }
 
   test("parLineOfSight on 1 element array") {
     val output = new Array[Float](1)
-    parLineOfSight(Array[Float](3f), output, 2)
+    parLineOfSight(Array[Float](3f), output, 1)
     assertEquals(output.toList, List(0f))
   }
 
   test("parLineOfSight on 2 element array") {
     val output = new Array[Float](2)
-    parLineOfSight(Array[Float](0f, 3f), output, 2)
+    parLineOfSight(Array[Float](0f, 3f), output, 1)
     assertEquals(output.toList, List(0f, 3f))
   }
 
   test("parLineOfSight should correctly handle an array of size 4") {
     val output = new Array[Float](4)
-    parLineOfSight(Array[Float](0f, 1f, 8f, 9f), output, 2)
+    parLineOfSight(Array[Float](0f, 1f, 8f, 9f), output, 1)
     assertEquals(output.toList, List(0f, 1f, 4f, 4f))
   }
 
   test("parLineOfSight on changing terrain") {
     val output = new Array[Float](10)
-    parLineOfSight(Array[Float](0f, 1f, 4f, 5f, 3f, 15f, 15f, 7f, 9f, 54f), output, 2)
+    parLineOfSight(Array[Float](0f, 1f, 4f, 5f, 3f, 15f, 15f, 7f, 9f, 54f), output, 1)
     assertEquals(output.toList, List(0f, 1f, 2f, 2f, 2f, 3f, 3f, 3f, 3f, 6f))
   }
 
