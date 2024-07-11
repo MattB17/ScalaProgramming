@@ -20,6 +20,49 @@ class KMeansSuite extends munit.FunSuite:
     checkParClassify(points, means, expected)
   }
 
+  test("classify with no points and one mean") {
+    val m0: Point = Point(1, 1, 1)
+    val points: ParSeq[Point] = IndexedSeq().par
+    val means: ParSeq[Point] = IndexedSeq(m0).par
+    val expected = ParMap[Point, ParSeq[Point]](m0 -> IndexedSeq().par)
+    checkParClassify(points, means, expected)
+  }
+
+  test("classify with multiple points and only one mean") {
+    val p0: Point = Point(0, 0, 0)
+    val p1: Point = Point(1, 1, 1)
+    val p2: Point = Point(2, 2, 2)
+    val m0: Point = Point(1, 1, 1)
+    val points: ParSeq[Point] = IndexedSeq(p0, p1, p2).par
+    val means: ParSeq[Point] = IndexedSeq(m0).par
+    val expected = ParMap[Point, ParSeq[Point]](m0 -> IndexedSeq(p0, p1, p2).par)
+    checkParClassify(points, means, expected)
+  }
+
+  test("classify with no points and multiple means") {
+    val m0: Point = Point(1, 1, 1)
+    val m1: Point = Point(100, 100, 100)
+    val points: ParSeq[Point] = IndexedSeq().par
+    val means: ParSeq[Point] = IndexedSeq(m0, m1).par
+    val expected = ParMap[Point, ParSeq[Point]](m0 -> IndexedSeq().par, m1 -> IndexedSeq().par)
+    checkParClassify(points, means, expected)
+  }
+
+  test("classify multiple points and multiple means") {
+    val p0: Point = Point(0, 0, 0)
+    val p1: Point = Point(1, 1, 1)
+    val p2: Point = Point(2, 2, 2)
+    val m0: Point = Point(1, 1, 1)
+    val m1: Point = Point(100, 100, 100)
+    val points: ParSeq[Point] = IndexedSeq(p0, p1, p2).par
+    val means: ParSeq[Point] = IndexedSeq(m0, m1).par
+    val expected = ParMap[Point, ParSeq[Point]](
+      m0 -> IndexedSeq(p0, p1, p2).par,
+      m1 -> IndexedSeq().par
+    )
+    checkParClassify(points, means, expected)
+  }
+
   import scala.concurrent.duration.*
   override val munitTimeout = 10.seconds
 

@@ -6,7 +6,9 @@ import scala.collection.parallel.CollectionConverters.*
 import scala.collection.parallel.{ForkJoinTaskSupport, ParMap, ParSeq}
 import scala.util.Random
 import org.scalameter.*
+
 import java.util.concurrent.ForkJoinPool
+import scala.collection.parallel.mutable.ParHashMap
 
 class KMeans extends KMeansInterface:
 
@@ -39,8 +41,13 @@ class KMeans extends KMeansInterface:
         closest = point
     closest
 
-  def classify(points: ParSeq[Point], means: ParSeq[Point]): ParMap[Point, ParSeq[Point]] =
-    ???
+  def classify(points: ParSeq[Point], means: ParSeq[Point]): ParMap[Point, ParSeq[Point]] = {
+    val result = new ParHashMap[Point, ParSeq[Point]]()
+    val classifyMap = points.groupBy(p => findClosest(p, means))
+
+
+    result ++ means.map(m => if classifyMap.contains(m) then (m -> classifyMap(m)) else (m -> IndexedSeq().par)).toMap
+  }
 
   def findAverage(oldMean: Point, points: ParSeq[Point]): Point = if points.isEmpty then oldMean else
     var x = 0.0
