@@ -61,7 +61,7 @@ class KMeans extends KMeansInterface:
     Point(x / points.length, y / points.length, z / points.length)
 
   def update(classified: ParMap[Point, ParSeq[Point]], oldMeans: ParSeq[Point]): ParSeq[Point] =
-    ???
+    oldMeans.map(m => findAverage(m, classified(m)))
 
   def converged(eta: Double, oldMeans: ParSeq[Point], newMeans: ParSeq[Point]): Boolean =
     ???
