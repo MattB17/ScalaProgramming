@@ -192,6 +192,87 @@ class KMeansSuite extends munit.FunSuite:
     assert(!converged(0, oldMeans, newMeans))
   }
 
+  test("kMeans on empty means and empty points") {
+    val points: ParSeq[Point] = IndexedSeq().par
+    val means: ParSeq[Point] = IndexedSeq().par
+    assertEquals(kMeans(points, means, 1), IndexedSeq().par)
+  }
+
+  test("kMeans with single mean that has already converged") {
+    val p0: Point = Point(-1, -1, -1)
+    val p1: Point = Point(0, 0, 0)
+    val p2: Point = Point(1, 1, 1)
+    val m0: Point = Point(0, 0, 0)
+    val points: ParSeq[Point] = IndexedSeq(p0, p1, p2).par
+    val means: ParSeq[Point] = IndexedSeq(m0).par
+    val result = kMeans(points, means, 1)
+    assertEquals(result.length, 1)
+    assert(pointsEqual(result.head, m0))
+  }
+
+  test("kMeans with single mean that has not converged") {
+    val p0: Point = Point(-1, -1, -1)
+    val p1: Point = Point(0, 0, 0)
+    val p2: Point = Point(1, 1, 1)
+    val m0: Point = Point(-1, -1, -1)
+    val points: ParSeq[Point] = IndexedSeq(p0, p1, p2).par
+    val means: ParSeq[Point] = IndexedSeq(m0).par
+    val result = kMeans(points, means, 2)
+    assertEquals(result.length, 1)
+    assert(pointsEqual(result.head, p1))
+  }
+
+  test("kkMeans multiple means that have converged") {
+    val p0: Point = Point(-1, -1, -1)
+    val p1: Point = Point(0, 0, 0)
+    val p2: Point = Point(1, 1, 1)
+    val p3: Point = Point(99, 99, 99)
+    val p4: Point = Point(100, 100, 100)
+    val p5: Point = Point(101, 101, 101)
+    val m0: Point = Point(0, 0, 0)
+    val m1: Point = Point(100, 100, 100)
+    val points: ParSeq[Point] = IndexedSeq(p0, p1, p2, p3, p4, p5).par
+    val means: ParSeq[Point] = IndexedSeq(m0, m1).par
+    val result = kMeans(points, means, 2)
+    assertEquals(result.length, 2)
+    assert(pointsEqual(result.head, p1))
+    assert(pointsEqual(result.tail.head, p4))
+  }
+
+  test("kkMeans multiple means one has not converged") {
+    val p0: Point = Point(-1, -1, -1)
+    val p1: Point = Point(0, 0, 0)
+    val p2: Point = Point(1, 1, 1)
+    val p3: Point = Point(99, 99, 99)
+    val p4: Point = Point(100, 100, 100)
+    val p5: Point = Point(101, 101, 101)
+    val m0: Point = Point(-1, -1, 0)
+    val m1: Point = Point(100, 100, 100)
+    val points: ParSeq[Point] = IndexedSeq(p0, p1, p2, p3, p4, p5).par
+    val means: ParSeq[Point] = IndexedSeq(m0, m1).par
+    val result = kMeans(points, means, 2)
+    assertEquals(result.length, 2)
+    assert(pointsEqual(result.head, p1))
+    assert(pointsEqual(result.tail.head, p4))
+  }
+
+  test("kkMeans multiple means, none have converged") {
+    val p0: Point = Point(-1, -1, -1)
+    val p1: Point = Point(0, 0, 0)
+    val p2: Point = Point(1, 1, 1)
+    val p3: Point = Point(99, 99, 99)
+    val p4: Point = Point(100, 100, 100)
+    val p5: Point = Point(101, 101, 101)
+    val m0: Point = Point(-1, -1, 0)
+    val m1: Point = Point(98, 97, 98)
+    val points: ParSeq[Point] = IndexedSeq(p0, p1, p2, p3, p4, p5).par
+    val means: ParSeq[Point] = IndexedSeq(m0, m1).par
+    val result = kMeans(points, means, 2)
+    assertEquals(result.length, 2)
+    assert(pointsEqual(result.head, p1))
+    assert(pointsEqual(result.tail.head, p4))
+  }
+
   import scala.concurrent.duration.*
   override val munitTimeout = 10.seconds
 
