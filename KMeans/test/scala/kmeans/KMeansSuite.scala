@@ -131,6 +131,67 @@ class KMeansSuite extends munit.FunSuite:
     assert(pointsEqual(result.tail.tail.head, p2))
   }
 
+  test("converged with empty means") {
+    val oldMeans: ParSeq[Point] = IndexedSeq().par
+    val newMeans: ParSeq[Point] = IndexedSeq().par
+    assert(converged(1, oldMeans, newMeans))
+  }
+
+  test("converged true with 1 mean") {
+    val oldMeans: ParSeq[Point] = IndexedSeq(Point(1, 1, 1)).par
+    val newMeans: ParSeq[Point] = IndexedSeq(Point(2, 1, 1)).par
+    assert(converged(1, oldMeans, newMeans))
+  }
+
+  test("converged false with 1 mean") {
+    val oldMeans: ParSeq[Point] = IndexedSeq(Point(1, 1, 1)).par
+    val newMeans: ParSeq[Point] = IndexedSeq(Point(3, 1, 1)).par
+    assert(!converged(3, oldMeans, newMeans))
+  }
+
+  test("converged true with multiple means") {
+    val m0: Point = Point(0, 0, 0)
+    val m1: Point = Point(10, 10, 10)
+    val m2: Point = Point(20, 20, 20)
+    val m3: Point = Point(1, 1, 1)
+    val m4: Point = Point(9, 9, 9)
+    val m5: Point = Point(20, 21, 21)
+    val oldMeans: ParSeq[Point] = IndexedSeq(m0, m1, m2).par
+    val newMeans: ParSeq[Point] = IndexedSeq(m3, m4, m5).par
+    assert(converged(3, oldMeans, newMeans))
+  }
+
+  test("converged false with multiple means") {
+    val m0: Point = Point(-10, -10, -10)
+    val m1: Point = Point(0, 0, 0)
+    val m2: Point = Point(10, 10, 10)
+    val m3: Point = Point(-10, -10, -10)
+    val m4: Point = Point(0, 0, 1)
+    val m5: Point = Point(8, 10, 10)
+    val oldMeans: ParSeq[Point] = IndexedSeq(m0, m1, m2).par
+    val newMeans: ParSeq[Point] = IndexedSeq(m3, m4, m5).par
+    assert(!converged(3, oldMeans, newMeans))
+  }
+
+  test("converged true with eta of 0") {
+    val m0: Point = Point(-1, -1, -1)
+    val m1: Point = Point(0, 0, 0)
+    val m2: Point = Point(1, 1, 1)
+    val oldMeans: ParSeq[Point] = IndexedSeq(m0, m1, m2).par
+    val newMeans: ParSeq[Point] = IndexedSeq(m0, m1, m2).par
+    assert(converged(0, oldMeans, newMeans))
+  }
+
+  test("converged false with eta of 0") {
+    val m0: Point = Point(-1, -1, -1)
+    val m1: Point = Point(0, 0, 0)
+    val m2: Point = Point(1, 1, 1)
+    val m3: Point = Point(1, 1, 2)
+    val oldMeans: ParSeq[Point] = IndexedSeq(m0, m1, m2).par
+    val newMeans: ParSeq[Point] = IndexedSeq(m0, m1, m3).par
+    assert(!converged(0, oldMeans, newMeans))
+  }
+
   import scala.concurrent.duration.*
   override val munitTimeout = 10.seconds
 

@@ -63,8 +63,11 @@ class KMeans extends KMeansInterface:
   def update(classified: ParMap[Point, ParSeq[Point]], oldMeans: ParSeq[Point]): ParSeq[Point] =
     oldMeans.map(m => findAverage(m, classified(m)))
 
-  def converged(eta: Double, oldMeans: ParSeq[Point], newMeans: ParSeq[Point]): Boolean =
-    ???
+  def converged(eta: Double, oldMeans: ParSeq[Point], newMeans: ParSeq[Point]): Boolean = {
+    val convergedMeanIds =(0 until oldMeans.length).par.filter(
+      i => oldMeans(i).squareDistance(newMeans(i)) <= eta)
+    convergedMeanIds.length == oldMeans.length
+  }
 
   @tailrec
   final def kMeans(points: ParSeq[Point], means: ParSeq[Point], eta: Double): ParSeq[Point] =
