@@ -36,6 +36,18 @@ class BarnesHutSuite extends munit.FunSuite:
     assert(quad.total == 1, s"${quad.total} should be 1")
   }
 
+  test ("Leaf with multiple bodies") {
+    val b0 = Body(100f, 18f, 26f, 0f, 0f)
+    val b1 = Body(100f, 16f, 24f, 0f, 0f)
+    val b2 = Body(100f, 20f, 28f, 0f, 0f)
+    val quad = Leaf(17.5f, 27.5f, 5f, Seq(b0, b1, b2))
+
+    assert(quad.mass ~= 300f, s"${quad.mass} should be 300f")
+    assert(quad.massX ~= 18f, s"${quad.massX} should be 18f")
+    assert(quad.massY ~= 26f, s"${quad.massY} should be 26f")
+    assert(quad.total == 3, s"${quad.total} should be 3")
+  }
+
 
   test("Fork with 3 empty quadrants and 1 leaf (nw)") {
     val b = Body(123f, 18f, 26f, 0f, 0f)
@@ -51,6 +63,73 @@ class BarnesHutSuite extends munit.FunSuite:
     assert(quad.massX ~= 18f, s"${quad.massX} should be 18f")
     assert(quad.massY ~= 26f, s"${quad.massY} should be 26f")
     assert(quad.total == 1, s"${quad.total} should be 1")
+  }
+
+  test("Fork with 3 empty quadrants and 1 leaf (ne)") {
+    val b = Body(123f, 18f, 26f, 0f, 0f)
+    val nw = Empty(17.5f, 27.5f, 5f)
+    val ne = Leaf(22.5f, 27.5f, 5f, Seq(b))
+    val sw = Empty(17.5f, 32.5f, 5f)
+    val se = Empty(22.5f, 32.5f, 5f)
+    val quad = Fork(nw, ne, sw, se)
+
+    assert(quad.centerX == 20f, s"${quad.centerX} should be 20f")
+    assert(quad.centerY == 30f, s"${quad.centerY} should be 30f")
+    assert(quad.mass ~= 123f, s"${quad.mass} should be 123f")
+    assert(quad.massX ~= 18f, s"${quad.massX} should be 18f")
+    assert(quad.massY ~= 26f, s"${quad.massY} should be 26f")
+    assert(quad.total == 1, s"${quad.total} should be 1")
+  }
+
+  test("Fork with 3 empty quadrants and 1 leaf (sw)") {
+    val b = Body(123f, 18f, 26f, 0f, 0f)
+    val nw = Empty(17.5f, 27.5f, 5f)
+    val ne = Empty(22.5f, 27.5f, 5f)
+    val sw = Leaf(17.5f, 32.5f, 5f, Seq(b))
+    val se = Empty(22.5f, 32.5f, 5f)
+    val quad = Fork(nw, ne, sw, se)
+
+    assert(quad.centerX == 20f, s"${quad.centerX} should be 20f")
+    assert(quad.centerY == 30f, s"${quad.centerY} should be 30f")
+    assert(quad.mass ~= 123f, s"${quad.mass} should be 123f")
+    assert(quad.massX ~= 18f, s"${quad.massX} should be 18f")
+    assert(quad.massY ~= 26f, s"${quad.massY} should be 26f")
+    assert(quad.total == 1, s"${quad.total} should be 1")
+  }
+
+  test("Fork with 3 empty quadrants and 1 leaf (se)") {
+    val b = Body(123f, 18f, 26f, 0f, 0f)
+    val nw = Empty(17.5f, 27.5f, 5f)
+    val ne = Empty(22.5f, 27.5f, 5f)
+    val sw = Empty(17.5f, 32.5f, 5f)
+    val se = Leaf(22.5f, 32.5f, 5f, Seq(b))
+    val quad = Fork(nw, ne, sw, se)
+
+    assert(quad.centerX == 20f, s"${quad.centerX} should be 20f")
+    assert(quad.centerY == 30f, s"${quad.centerY} should be 30f")
+    assert(quad.mass ~= 123f, s"${quad.mass} should be 123f")
+    assert(quad.massX ~= 18f, s"${quad.massX} should be 18f")
+    assert(quad.massY ~= 26f, s"${quad.massY} should be 26f")
+    assert(quad.total == 1, s"${quad.total} should be 1")
+  }
+
+  test("Fork with multiple leaves") {
+    val b0 = Body(100f, 18f, 26f, 0f, 0f)
+    val b1 = Body(100f, 16f, 24f, 0f, 0f)
+    val b2 = Body(100f, 20f, 28f, 0f, 0f)
+    val nw = Empty(17.5f, 27.5f, 5f)
+    val ne = Leaf(22.5f, 27.5f, 5f, Seq(b0))
+    val sw = Leaf(17.5f, 32.5f, 5f, Seq(b1))
+    val se = Leaf(22.5f, 32.5f, 5f, Seq(b2))
+
+    val quad = Fork(nw, ne, sw, se)
+
+    assert(quad.centerX == 20f, s"${quad.centerX} should be 20f")
+    assert(quad.centerY == 30f, s"${quad.centerY} should be 30f")
+    assert(quad.mass ~= 300f, s"${quad.mass} should be 300f")
+    assert(quad.massX ~= 18f, s"${quad.massX} should be 18f")
+    assert(quad.massY ~= 26f, s"${quad.massY} should be 26f")
+    assert(quad.total == 3, s"${quad.total} should be 3")
   }
 
   test("Empty.insert(b) should return a Leaf with only that body (2pts)") {

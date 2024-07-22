@@ -44,31 +44,75 @@ sealed abstract class Quad extends QuadInterface:
   def insert(b: Body): Quad
 
 case class Empty(centerX: Float, centerY: Float, size: Float) extends Quad:
-  def massX: Float = ???
-  def massY: Float = ???
-  def mass: Float = ???
-  def total: Int = ???
-  def insert(b: Body): Quad = ???
+  def massX: Float = centerX
+  def massY: Float = centerY
+  def mass: Float = 0
+  def total: Int = 0
+  def insert(b: Body): Quad = Leaf(centerX, centerY, size, Seq[Body](b))
 
 case class Fork(
   nw: Quad, ne: Quad, sw: Quad, se: Quad
 ) extends Quad:
-  val centerX: Float = ???
-  val centerY: Float = ???
-  val size: Float = ???
-  val mass: Float = ???
-  val massX: Float = ???
-  val massY: Float = ???
-  val total: Int = ???
+  val centerX: Float = (nw.centerX + ne.centerX) / 2
+  val centerY: Float = (nw.centerY + sw.centerY) / 2
+  val size: Float = nw.size + ne.size + sw.size + se.size
+  val mass: Float = nw.mass + ne.mass + sw.mass + se.mass
+  val massX: Float = {
+    val sumX = Seq(nw, ne, sw, se)
+      .map(b => (b.mass * b.massX))
+      .sum
+    sumX / mass
+  }
+  val massY: Float = {
+    val sumY = Seq(nw, ne, sw, se)
+      .map(b => (b.mass * b.massY))
+      .sum
+    sumY / mass
+  }
+  val total: Int = nw.total + ne.total + sw.total + se.total
 
-  def insert(b: Body): Fork =
-    ???
+  def insert(b: Body): Fork = {
+    if (b.x <= centerX && b.y <= centerY) {
+      Fork(nw.insert(b), ne, sw, se)
+    } else if (b.x <= centerX) {
+      Fork(nw, ne, sw.insert(b), se)
+    } else if (b.y <= centerY) {
+      Fork(nw, ne.insert(b), sw, se)
+    } else {
+      Fork(nw, ne, sw, se.insert(b))
+    }
+  }
 
 case class Leaf(centerX: Float, centerY: Float, size: Float, bodies: coll.Seq[Body])
 extends Quad:
-  val (mass, massX, massY) = (??? : Float, ??? : Float, ??? : Float)
-  val total: Int = ???
-  def insert(b: Body): Quad = ???
+  val mass: Float = bodies.map(b => b.mass).sum
+  val massX: Float = bodies.map(b => (b.mass * b.x)).sum / mass
+  val massY: Float = bodies.map(b => (b.mass * b.y)).sum / mass
+  val total: Int = bodies.length
+  def insert(b: Body): Quad = {
+    val newBodies = bodies :+ b
+    if (size <= minimumSize) {
+      Leaf(centerX, centerY, size, newBodies)
+    } else {
+      val quarterSize = size / 4
+      val nw = Empty(centerX - quarterSize, centerY - quarterSize, quarterSize)
+      val ne = Empty(centerX + quarterSize, centerY - quarterSize, quarterSize)
+      val sw = Empty(centerX - quarterSize, centerY + quarterSize, quarterSize)
+      val se = Empty(centerX + quarterSize, centerY + quarterSize, quarterSize)
+      newBodies.foreach(b => {
+        if (b.x <= centerX && b.y <= centerY) {
+          nw.insert(b)
+        } else if (b.x <= centerX) {
+          sw.insert(b)
+        } else if (b.y <= centerY) {
+          ne.insert(b)
+        } else {
+          se.insert(b)
+        }
+      })
+      Fork(nw, ne, sw, se)
+    }
+  }
 
 def minimumSize = 0.00001f
 
