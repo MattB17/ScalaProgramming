@@ -48,6 +48,21 @@ class BarnesHutSuite extends munit.FunSuite:
     assert(quad.total == 3, s"${quad.total} should be 3")
   }
 
+  test("Fork with 4 empty quadrants") {
+    val nw = Empty(17.5f, 27.5f, 5f)
+    val ne = Empty(22.5f, 27.5f, 5f)
+    val sw = Empty(17.5f, 32.5f, 5f)
+    val se = Empty(22.5f, 32.5f, 5f)
+    val quad = Fork(nw, ne, sw, se)
+
+    assert(quad.centerX == 20f, s"${quad.centerX} should be 20f")
+    assert(quad.centerY == 30f, s"${quad.centerY} should be 30f")
+    assert(quad.mass ~= 0f, s"${quad.mass} should be 0f")
+    assert(quad.massX ~= 20f, s"${quad.massX} should be 0f")
+    assert(quad.massY ~= 30f, s"${quad.massY} should be 0f")
+    assert(quad.total == 0, s"${quad.total} should be 0")
+  }
+
 
   test("Fork with 3 empty quadrants and 1 leaf (nw)") {
     val b = Body(123f, 18f, 26f, 0f, 0f)
@@ -144,6 +159,118 @@ class BarnesHutSuite extends munit.FunSuite:
         assert(bodies == Seq(b), s"$bodies should contain only the inserted body")
       case _ =>
         fail("Empty.insert() should have returned a Leaf, was $inserted")
+  }
+
+  test("Leaf.insert(b) should return a Leaf when below minimumSize") {
+    val b0 = Body(10f, 5f, 10f, 0f, 0f)
+    val b1 = Body(5f, 5f, 10f, 1f, 1f)
+    val quad = Leaf(5f, 10f, 0.000005f, Seq(b0))
+    val inserted = quad.insert(b1)
+    inserted match {
+      case Leaf(centerX, centerY, size, bodies) => {
+        assert(centerX == 5f, s"$centerX should be 5f")
+        assert(centerY == 10f, s"$centerY should be 10f")
+        assert(size == 0.000005f, s"$size should be 0.000005f")
+        assert(bodies == Seq(b0, b1), s"$bodies should contain 2 elements")
+      }
+      case _ => fail("Leaf.insert() should return another Leaf")
+    }
+  }
+
+  test("Leaf.insert(b) should return a Fork when above minimumSize") {
+    val b0 = Body(10f, 2.5f, 2.5f, 0f, 0f)
+    val b1 = Body(5f, 7.5f, 7.5f, 0f, 0f)
+    val quad = Leaf(5f, 5f, 10f, Seq(b0))
+    val inserted = quad.insert(b1)
+    inserted match {
+      case Fork(nw, ne, sw, se) => {
+        nw match {
+          case Leaf(centerX, centerY, size, bodies) => {
+            assert(centerX == 2.5f)
+            assert(centerY == 2.5f)
+            assert(size == 5f)
+            assert(bodies == Seq(b0), "nw should contain only b0")
+          }
+          case _ => fail("nw should be a Leaf")
+        }
+        ne match {
+          case Empty(centerX, centerY, size) => {
+            assert(centerX == 7.5f)
+            assert(centerY == 2.5f)
+            assert(size == 5f)
+          }
+          case _ => fail("ne should be Empty")
+        }
+        sw match {
+          case Empty(centerX, centerY, size) => {
+            assert(centerX == 2.5f)
+            assert(centerY == 7.5f)
+            assert(size == 5f)
+          }
+          case _ => fail("sw should be Empty")
+        }
+        se match {
+          case Leaf(centerX, centerY, size, bodies) => {
+            assert(centerX == 7.5f)
+            assert(centerY == 7.5f)
+            assert(size == 5f)
+            assert(bodies == Seq(b1), "nw should contain only b0")
+          }
+          case _ => fail("se should be a Leaf")
+        }
+      }
+      case _ => fail("Leaf.insert() should return a Fork")
+    }
+  }
+
+  test("Fork insert") {
+    val b0 = Body(10f, 2.5f, 2.5f, 0f, 0f)
+    val b1 = Body(5f, 7.5f, 7.5f, 0f, 0f)
+    val currNw = Leaf(2.5f, 2.5f, 5f, Seq(b0))
+    val currNe = Empty(7.5f, 2.5f, 5f)
+    val currSw = Empty(2.5f, 7.5f, 5f)
+    val currSe = Empty(7.5f, 7.5f, 5f)
+    val quad = Fork(currNw, currNe, currSw, currSe)
+    val inserted = quad.insert(b1)
+    inserted match {
+      case Fork(nw, ne, sw, se) => {
+        nw match {
+          case Leaf(centerX, centerY, size, bodies) => {
+            assert(centerX == 2.5f)
+            assert(centerY == 2.5f)
+            assert(size == 5f)
+            assert(bodies == Seq(b0), "nw should contain only b0")
+          }
+          case _ => fail("nw should still be a Leaf")
+        }
+        ne match {
+          case Empty(centerX, centerY, size) => {
+            assert(centerX == 7.5f)
+            assert(centerY == 2.5f)
+            assert(size == 5f)
+          }
+          case _ => fail("ne should still be Empty")
+        }
+        sw match {
+          case Empty(centerX, centerY, size) => {
+            assert(centerX == 2.5f)
+            assert(centerY == 7.5f)
+            assert(size == 5f)
+          }
+          case _ => fail("sw should still be Empty")
+        }
+        se match {
+          case Leaf(centerX, centerY, size, bodies) => {
+            assert(centerX == 7.5f)
+            assert(centerY == 7.5f)
+            assert(size == 5f)
+            assert(bodies == Seq(b1), "nw should contain only b0")
+          }
+          case _ => fail("se should be a Leaf")
+        }
+      }
+      case _ => fail("Inserting into a Fork should yield a Fork")
+    }
   }
 
   // test cases for Body

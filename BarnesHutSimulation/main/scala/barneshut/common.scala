@@ -58,16 +58,24 @@ case class Fork(
   val size: Float = nw.size + ne.size + sw.size + se.size
   val mass: Float = nw.mass + ne.mass + sw.mass + se.mass
   val massX: Float = {
-    val sumX = Seq(nw, ne, sw, se)
-      .map(b => (b.mass * b.massX))
-      .sum
-    sumX / mass
+    if (mass <= 0f) {
+      centerX
+    } else {
+      val sumX = Seq(nw, ne, sw, se)
+        .map(b => (b.mass * b.massX))
+        .sum
+      sumX / mass
+    }
   }
   val massY: Float = {
-    val sumY = Seq(nw, ne, sw, se)
-      .map(b => (b.mass * b.massY))
-      .sum
-    sumY / mass
+    if (mass <= 0f) {
+      centerY
+    } else {
+      val sumY = Seq(nw, ne, sw, se)
+        .map(b => (b.mass * b.massY))
+        .sum
+      sumY / mass
+    }
   }
   val total: Int = nw.total + ne.total + sw.total + se.total
 
@@ -95,22 +103,11 @@ extends Quad:
       Leaf(centerX, centerY, size, newBodies)
     } else {
       val quarterSize = size / 4
-      val nw = Empty(centerX - quarterSize, centerY - quarterSize, quarterSize)
-      val ne = Empty(centerX + quarterSize, centerY - quarterSize, quarterSize)
-      val sw = Empty(centerX - quarterSize, centerY + quarterSize, quarterSize)
-      val se = Empty(centerX + quarterSize, centerY + quarterSize, quarterSize)
-      newBodies.foreach(b => {
-        if (b.x <= centerX && b.y <= centerY) {
-          nw.insert(b)
-        } else if (b.x <= centerX) {
-          sw.insert(b)
-        } else if (b.y <= centerY) {
-          ne.insert(b)
-        } else {
-          se.insert(b)
-        }
-      })
-      Fork(nw, ne, sw, se)
+      val nw = Empty(centerX - quarterSize, centerY - quarterSize, 2 * quarterSize)
+      val ne = Empty(centerX + quarterSize, centerY - quarterSize, 2 * quarterSize)
+      val sw = Empty(centerX - quarterSize, centerY + quarterSize, 2 * quarterSize)
+      val se = Empty(centerX + quarterSize, centerY + quarterSize, 2 * quarterSize)
+      newBodies.foldLeft(Fork(nw, ne, sw, se))((q, b) => q.insert(b))
     }
   }
 
