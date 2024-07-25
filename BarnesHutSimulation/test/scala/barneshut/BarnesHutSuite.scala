@@ -296,6 +296,44 @@ class BarnesHutSuite extends munit.FunSuite:
     assert(body.yspeed ~= 0.015557117f)
   }
 
+  test("Body.updated with a distant Fork") {
+    val b0 = Body(77f, 8f, 26f, 0f, 0f)
+    val b1 = Body(123f, 18f, 26f, 0f, 0f)
+    val nw = Leaf(17.5f, 27.5f, 5f, Seq(b1))
+    val ne = Empty(22.5f, 27.5f, 5f)
+    val sw = Empty(17.5f, 32.5f, 5f)
+    val se = Empty(22.5f, 32.5f, 5f)
+    val quad = Fork(nw, ne, sw, se)
+    val body = b0.updated(quad)
+
+    assert(body.mass == 77f)
+    assert(body.x == 8f)
+    assert(body.y == 26f)
+    assert(body.xspeed ~= 1.230000f)
+    assert(body.yspeed == 0f)
+  }
+
+  test("Body.updated with a close Fork") {
+    val b0 = Body(10f, 5f, 5f, 1f, 1f)
+    val b1 = Body(10f, 2f, 1f, 2f, 2f)
+    val b2 = Body(5f, 11f, 5f, 3f, 3f)
+
+    val nw = Leaf(2.5f, 2.5f, 5f, Seq(b1))
+    val ne = Empty(7.5f, 2.5f, 5f)
+    val sw = Empty(2.5f, 7.5f, 5f)
+    val se = Leaf(7.5f, 7.5f, 5f, Seq(b2))
+
+    val quad = Fork(nw, ne, sw, se)
+
+    val body = b0.updated(quad)
+
+    assert(body.mass == 10f)
+    assert(body.x ~= 5.01f)
+    assert(body.y ~= 5.01f)
+    assert(body.xspeed ~= 0.89888888f)
+    assert(body.yspeed ~= 0.68f)
+  }
+
   // test cases for sector matrix
 
   test("'SectorMatrix.+=' should add a body at (25,47) to the correct bucket of a sector matrix of size 96 (2pts)") {
