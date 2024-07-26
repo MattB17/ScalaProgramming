@@ -192,7 +192,9 @@ class SectorMatrix(val boundaries: Boundaries, val sectorPrecision: Int) extends
   for i <- 0 until matrix.length do matrix(i) = ConcBuffer()
 
   def +=(b: Body): SectorMatrix =
-    ???
+    val xVal = math.min(math.max(b.x, boundaries.minX), boundaries.maxX - 1) - boundaries.minX
+    val yVal = math.min(math.max(b.y, boundaries.minY), boundaries.maxY - 1) - boundaries.minY
+    this((xVal / sectorSize).toInt, (yVal / sectorSize).toInt) += b
     this
 
   def apply(x: Int, y: Int) = matrix(y * sectorPrecision + x)

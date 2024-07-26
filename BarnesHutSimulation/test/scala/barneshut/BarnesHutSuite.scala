@@ -349,6 +349,82 @@ class BarnesHutSuite extends munit.FunSuite:
     assert(res, s"Body not found in the right sector")
   }
 
+  test("'SectorMatrix.+=' adding bodies on boundaries") {
+    val b0 = Body(5, 1, 1, 0.1f, 0.1f)
+    val b1 = Body(10, 80, 80, 0.3f, 0.2f)
+    val b2 = Body(7, 1, 80, 0.1f, 0.1f)
+    val b3 = Body(15, 80, 1, 0f, 0f)
+    val boundaries = Boundaries()
+    boundaries.minX = 1
+    boundaries.minY = 1
+    boundaries.maxX = 81
+    boundaries.maxY = 81
+    val sm = SectorMatrix(boundaries, SECTOR_PRECISION)
+    sm += b0
+    sm += b1
+    sm += b2
+    sm +=b3
+
+    val res0 = sm(0, 0).size == 1 && sm(0, 0).find(_ == b0).isDefined
+    assert(res0, "b0 not found in the right sector")
+
+    val res1 = sm(7, 7).size == 1 && sm(7, 7).find(_ == b1).isDefined
+    assert(res1, "b1 not found in the right sector")
+
+    val res2 = sm(0, 7).size == 1 && sm(0, 7).find(_ == b2).isDefined
+    assert(res2, "b2 not found in the right sector")
+
+    val res3 = sm(7, 0).size == 1 && sm(7, 0).find(_ == b3).isDefined
+    assert(res3, "b3 not found in the right sector")
+  }
+
+  test("'SectorMatrix.+=' adding bodies outside boundaries") {
+    val b0 = Body(5, 1, 1, 0.1f, 0.1f)
+    val b1 = Body(10, 100, 105, 0.3f, 0.2f)
+    val b2 = Body(7, 6, 98, 0.1f, 0.1f)
+    val b3 = Body(15, 120, 4, 0f, 0f)
+    val boundaries = Boundaries()
+    boundaries.minX = 11
+    boundaries.minY = 11
+    boundaries.maxX = 91
+    boundaries.maxY = 91
+    val sm = SectorMatrix(boundaries, SECTOR_PRECISION)
+    sm += b0
+    sm += b1
+    sm += b2
+    sm += b3
+
+    val res0 = sm(0, 0).size == 1 && sm(0, 0).find(_ == b0).isDefined
+    assert(res0, "b0 not found in the right sector")
+
+    val res1 = sm(7, 7).size == 1 && sm(7, 7).find(_ == b1).isDefined
+    assert(res1, "b1 not found in the right sector")
+
+    val res2 = sm(0, 7).size == 1 && sm(0, 7).find(_ == b2).isDefined
+    assert(res2, "b2 not found in the right sector")
+
+    val res3 = sm(7, 0).size == 1 && sm(7, 0).find(_ == b3).isDefined
+    assert(res3, "b3 not found in the right sector")
+  }
+
+  test("'SectorMatrix.+=' adding bodies to the same sector") {
+    val b0 = Body(5, 31, 45, 0f, 0f)
+    val b1 = Body(10, 33, 41, 0.5f, 0.4f)
+    val b2 = Body(12, 39, 47, 0.2f, 0.9f)
+    val boundaries = Boundaries()
+    boundaries.minX = 1
+    boundaries.minY = 1
+    boundaries.maxX = 81
+    boundaries.maxY = 81
+    val sm = SectorMatrix(boundaries, SECTOR_PRECISION)
+    sm += b0
+    sm += b1
+    sm += b2
+
+    val res = sm(3, 4).size == 3
+    assert(res, "At least one body added to wrong sector")
+  }
+
   import scala.concurrent.duration.*
   override val munitTimeout = 10.seconds
 
