@@ -94,8 +94,14 @@ case class Fork(
 case class Leaf(centerX: Float, centerY: Float, size: Float, bodies: coll.Seq[Body])
 extends Quad:
   val mass: Float = bodies.map(b => b.mass).sum
-  val massX: Float = bodies.map(b => (b.mass * b.x)).sum / mass
-  val massY: Float = bodies.map(b => (b.mass * b.y)).sum / mass
+  val massX: Float = {
+    if (mass <= 0f) centerX
+    else bodies.map(b => (b.mass * b.x)).sum / mass
+  }
+  val massY: Float = {
+    if (mass <= 0f) centerY
+    else bodies.map(b => (b.mass * b.y)).sum / mass
+  }
   val total: Int = bodies.length
   def insert(b: Body): Quad = {
     val newBodies = bodies :+ b
@@ -200,7 +206,9 @@ class SectorMatrix(val boundaries: Boundaries, val sectorPrecision: Int) extends
   def apply(x: Int, y: Int) = matrix(y * sectorPrecision + x)
 
   def combine(that: SectorMatrix): SectorMatrix =
-    ???
+    val result = SectorMatrix(boundaries, sectorPrecision)
+    matrix.indices.foreach(i => result.matrix(i) = matrix(i).combine(that.matrix(i)))
+    result
 
   def toQuad(parallelism: Int): Quad =
     def BALANCING_FACTOR = 4

@@ -425,6 +425,89 @@ class BarnesHutSuite extends munit.FunSuite:
     assert(res, "At least one body added to wrong sector")
   }
 
+  test("'combine' with two SectorMatrices that have elements at boundaries") {
+    val b0 = Body(5, 1, 1, 0.1f, 0.1f)
+    val b1 = Body(10, 80, 80, 0.3f, 0.2f)
+    val b2 = Body(7, 1, 80, 0.1f, 0.1f)
+    val b3 = Body(15, 80, 1, 0f, 0f)
+    val boundaries = Boundaries()
+    boundaries.minX = 1
+    boundaries.minY = 1
+    boundaries.maxX = 81
+    boundaries.maxY = 81
+    val sm1 = SectorMatrix(boundaries, SECTOR_PRECISION)
+    sm1 += b0
+    sm1 += b1
+    sm1 += b2
+    sm1 += b3
+
+    val b4 = Body(5, 0, 0, 0.1f, 0.1f)
+    val b5 = Body(10, 100, 105, 0.3f, 0.2f)
+    val b6 = Body(7, 1, 98, 0.1f, 0.1f)
+    val b7 = Body(15, 120, 1, 0f, 0f)
+    val sm2 = SectorMatrix(boundaries, SECTOR_PRECISION)
+    sm2 += b4
+    sm2 += b5
+    sm2 += b6
+    sm2 += b7
+
+    val sm = sm1.combine(sm2)
+
+    val res0 = sm(0, 0).size == 2
+    assert(res0, "b0 not found in the right sector")
+
+    val res1 = sm(7, 7).size == 2
+    assert(res1, "b1 not found in the right sector")
+
+    val res2 = sm(0, 7).size == 2
+    assert(res2, "b2 not found in the right sector")
+
+    val res3 = sm(7, 0).size == 2
+    assert(res3, "b3 not found in the right sector")
+  }
+
+  test("'combine' with two disjoint sector matrices") {
+    val b0 = Body(5, 1, 1, 0.1f, 0.1f)
+    val b1 = Body(10, 80, 80, 0.3f, 0.2f)
+    val b2 = Body(7, 1, 80, 0.1f, 0.1f)
+    val b3 = Body(15, 80, 1, 0f, 0f)
+    val boundaries = Boundaries()
+    boundaries.minX = 1
+    boundaries.minY = 1
+    boundaries.maxX = 81
+    boundaries.maxY = 81
+    val sm1 = SectorMatrix(boundaries, SECTOR_PRECISION)
+    sm1 += b0
+    sm1 += b1
+    sm1 += b2
+    sm1 += b3
+
+    val b4 = Body(5, 31, 45, 0f, 0f)
+    val b5 = Body(10, 33, 41, 0.5f, 0.4f)
+    val b6 = Body(12, 39, 47, 0.2f, 0.9f)
+    val sm2 = SectorMatrix(boundaries, SECTOR_PRECISION)
+    sm2 += b4
+    sm2 += b5
+    sm2 += b6
+
+    val sm = sm1.combine(sm2)
+
+    val res0 = sm(0, 0).size == 1 && sm(0, 0).find(_ == b0).isDefined
+    assert(res0, "b0 not found in the right sector")
+
+    val res1 = sm(7, 7).size == 1 && sm(7, 7).find(_ == b1).isDefined
+    assert(res1, "b1 not found in the right sector")
+
+    val res2 = sm(0, 7).size == 1 && sm(0, 7).find(_ == b2).isDefined
+    assert(res2, "b2 not found in the right sector")
+
+    val res3 = sm(7, 0).size == 1 && sm(7, 0).find(_ == b3).isDefined
+    assert(res3, "b3 not found in the right sector")
+
+    val res = sm(3, 4).size == 3
+    assert(res, "At least one body added to wrong sector")
+  }
+
   import scala.concurrent.duration.*
   override val munitTimeout = 10.seconds
 
