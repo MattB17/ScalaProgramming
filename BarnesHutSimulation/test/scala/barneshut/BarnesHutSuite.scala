@@ -508,6 +508,170 @@ class BarnesHutSuite extends munit.FunSuite:
     assert(res, "At least one body added to wrong sector")
   }
 
+  test("Simulation update boundaries body inside boundary") {
+    val b = Body(10f, 5f, 5f, 3f, 3f)
+    val boundaries = Boundaries()
+    boundaries.minX = 1
+    boundaries.minY = 1
+    boundaries.maxX = 10
+    boundaries.maxY = 10
+
+    val model = SimulationModel()
+    val sim = Simulator(model.taskSupport, model.timeStats)
+    val newBoundaries = sim.updateBoundaries(boundaries, b)
+
+    assert(newBoundaries.minX == boundaries.minX)
+    assert(newBoundaries.minY == boundaries.minY)
+    assert(newBoundaries.maxX == boundaries.maxX)
+    assert(newBoundaries.maxY == boundaries.maxY)
+  }
+
+  test("Simulation update boundaries body left of boundary") {
+    val b = Body(10f, 5f, 5f, 3f, 3f)
+    val boundaries = Boundaries()
+    boundaries.minX = 10
+    boundaries.minY = 1
+    boundaries.maxX = 20
+    boundaries.maxY = 10
+
+    val model = SimulationModel()
+    val sim = Simulator(model.taskSupport, model.timeStats)
+    val newBoundaries = sim.updateBoundaries(boundaries, b)
+
+    assert(newBoundaries.minX == 5f)
+    assert(newBoundaries.minY == boundaries.minY)
+    assert(newBoundaries.maxX == boundaries.maxX)
+    assert(newBoundaries.maxY == boundaries.maxY)
+  }
+
+  test("Simulation update boundaries body right of boundary") {
+    val b = Body(10f, 15f, 15f, 3f, 3f)
+    val boundaries = Boundaries()
+    boundaries.minX = 1
+    boundaries.minY = 1
+    boundaries.maxX = 10
+    boundaries.maxY = 10
+
+    val model = SimulationModel()
+    val sim = Simulator(model.taskSupport, model.timeStats)
+    val newBoundaries = sim.updateBoundaries(boundaries, b)
+
+    assert(newBoundaries.minX == boundaries.minX)
+    assert(newBoundaries.minY == boundaries.minY)
+    assert(newBoundaries.maxX == 15f)
+    assert(newBoundaries.maxY == 15f)
+  }
+
+  test("Simulation update boundaries body below boundary") {
+    val b = Body(10f, 5f, 20f, 3f, 3f)
+    val boundaries = Boundaries()
+    boundaries.minX = 1
+    boundaries.minY = 1
+    boundaries.maxX = 10
+    boundaries.maxY = 10
+
+    val model = SimulationModel()
+    val sim = Simulator(model.taskSupport, model.timeStats)
+    val newBoundaries = sim.updateBoundaries(boundaries, b)
+
+    assert(newBoundaries.minX == boundaries.minX)
+    assert(newBoundaries.minY == boundaries.minY)
+    assert(newBoundaries.maxX == boundaries.maxX)
+    assert(newBoundaries.maxY == 20f)
+  }
+
+  test("Simulation mergeBoundaries with 2 identical boundaries") {
+    val a = Boundaries()
+    a.minX = 1
+    a.maxX = 10
+    a.minY = 1
+    a.maxY = 10
+
+    val b = Boundaries()
+    b.minX = 1
+    b.maxX = 10
+    b.minY = 1
+    b.maxY = 10
+
+    val model = SimulationModel()
+    val sim = Simulator(model.taskSupport, model.timeStats)
+    val result = sim.mergeBoundaries(a, b)
+
+    assert(result.minX == a.minX)
+    assert(result.minY == a.minY)
+    assert(result.maxX == a.maxX)
+    assert(result.maxY == a.maxY)
+  }
+
+  test("Simulation mergeBoundaries one boundaries contained in another") {
+    val a = Boundaries()
+    a.minX = 11
+    a.maxX = 20
+    a.minY = 11
+    a.maxY = 20
+
+    val b = Boundaries()
+    b.minX = 1
+    b.maxX = 30
+    b.minY = 1
+    b.maxY = 30
+
+    val model = SimulationModel()
+    val sim = Simulator(model.taskSupport, model.timeStats)
+    val result = sim.mergeBoundaries(a, b)
+
+    assert(result.minX == b.minX)
+    assert(result.minY == b.minY)
+    assert(result.maxX == b.maxX)
+    assert(result.maxY == b.maxY)
+  }
+
+  test("Simulation mergeBoundaries 2 boundaries with overlap") {
+    val a = Boundaries()
+    a.minX = 1
+    a.maxX = 20
+    a.minY = 1
+    a.maxY = 20
+
+    val b = Boundaries()
+    b.minX = 11
+    b.maxX = 30
+    b.minY = 11
+    b.maxY = 30
+
+    val model = SimulationModel()
+    val sim = Simulator(model.taskSupport, model.timeStats)
+    val result = sim.mergeBoundaries(a, b)
+
+    assert(result.minX == a.minX)
+    assert(result.minY == a.minY)
+    assert(result.maxX == b.maxX)
+    assert(result.maxY == b.maxY)
+  }
+
+  test("Simulation mergeBoundaries with 2 disjoint boundaries") {
+    val a = Boundaries()
+    a.minX = 1
+    a.maxX = 10
+    a.minY = 1
+    a.maxY = 10
+
+    val b = Boundaries()
+    b.minX = 21
+    b.maxX = 40
+    b.minY = 5
+    b.maxY = 20
+
+    val model = SimulationModel()
+    val sim = Simulator(model.taskSupport, model.timeStats)
+    val result = sim.mergeBoundaries(a, b)
+
+    assert(result.minX == a.minX)
+    assert(result.minY == a.minY)
+    assert(result.maxX == b.maxX)
+    assert(result.maxY == b.maxY)
+  }
+
   import scala.concurrent.duration.*
   override val munitTimeout = 10.seconds
 
