@@ -672,6 +672,94 @@ class BarnesHutSuite extends munit.FunSuite:
     assert(result.maxY == b.maxY)
   }
 
+  test("Simulator computeSectorMatrix with no bodies") {
+    val boundaries = Boundaries()
+    boundaries.minX = 1
+    boundaries.minY = 1
+    boundaries.maxX = 10
+    boundaries.maxY = 10
+
+    val model = SimulationModel()
+    val sim = Simulator(model.taskSupport, model.timeStats)
+    val result = sim.computeSectorMatrix(IndexedSeq(), boundaries)
+
+    assert(result.boundaries.minX == 1)
+    assert(result.boundaries.minY == 1)
+    assert(result.boundaries.maxX == 10)
+    assert(result.boundaries.maxY == 10)
+  }
+
+  test("Simulator computeSectorMatrix with multiple bodies") {
+    val b0 = Body(5, 1, 1, 0.1f, 0.1f)
+    val b1 = Body(10, 80, 80, 0.3f, 0.2f)
+    val b2 = Body(7, 1, 80, 0.1f, 0.1f)
+    val b3 = Body(15, 80, 1, 0f, 0f)
+    val boundaries = Boundaries()
+    boundaries.minX = 21
+    boundaries.minY = 21
+    boundaries.maxX = 40
+    boundaries.maxY = 40
+
+    val model = SimulationModel()
+    val sim = Simulator(model.taskSupport, model.timeStats)
+    val result = sim.computeSectorMatrix(IndexedSeq(b0, b1, b2, b3), boundaries)
+
+    assert(result.boundaries.minX == 1)
+    assert(result.boundaries.minY == 1)
+    assert(result.boundaries.maxX == 80)
+    assert(result.boundaries.maxY == 80)
+
+    val res0 = result(0, 0).size == 1 && result(0, 0).find(_ == b0).isDefined
+    assert(res0, "b0 not found in the right sector")
+
+    val res1 = result(7, 7).size == 1 && result(7, 7).find(_ == b1).isDefined
+    assert(res1, "b1 not found in the right sector")
+
+    val res2 = result(0, 7).size == 1 && result(0, 7).find(_ == b2).isDefined
+    assert(res2, "b2 not found in the right sector")
+
+    val res3 = result(7, 0).size == 1 && result(7, 0).find(_ == b3).isDefined
+    assert(res3, "b3 not found in the right sector")
+  }
+
+  test("Simulator updateBodies with no bodies") {
+    val nw = Empty(17.5f, 27.5f, 5f)
+    val ne = Empty(22.5f, 27.5f, 5f)
+    val sw = Empty(17.5f, 32.5f, 5f)
+    val se = Empty(22.5f, 32.5f, 5f)
+    val quad = Fork(nw, ne, sw, se)
+
+    val model = SimulationModel()
+    val sim = Simulator(model.taskSupport, model.timeStats)
+    val result = sim.updateBodies(IndexedSeq(), quad)
+
+    assert(result == IndexedSeq())
+  }
+
+  test("Simulator updateBodies with 1 body") {
+    val b0 = Body(10f, 5f, 5f, 1f, 1f)
+    val b1 = Body(10f, 2f, 1f, 2f, 2f)
+    val b2 = Body(5f, 11f, 5f, 3f, 3f)
+
+    val nw = Leaf(2.5f, 2.5f, 5f, Seq(b1))
+    val ne = Empty(7.5f, 2.5f, 5f)
+    val sw = Empty(2.5f, 7.5f, 5f)
+    val se = Leaf(7.5f, 7.5f, 5f, Seq(b2))
+
+    val quad = Fork(nw, ne, sw, se)
+
+    val model = SimulationModel()
+    val sim = Simulator(model.taskSupport, model.timeStats)
+    val result = sim.updateBodies(IndexedSeq(b0), quad)
+
+    assert(result.length == 1)
+    assert(result.head.mass == 10f)
+    assert(result.head.x ~= 5.01f)
+    assert(result.head.y ~= 5.01f)
+    assert(result.head.xspeed ~= 0.89888888f)
+    assert(result.head.yspeed ~= 0.68f)
+  }
+
   import scala.concurrent.duration.*
   override val munitTimeout = 10.seconds
 
