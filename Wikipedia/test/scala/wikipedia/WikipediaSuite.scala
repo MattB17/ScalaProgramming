@@ -3,6 +3,7 @@ package wikipedia
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext.*
+import org.apache.spark.rdd.RDD
 
 class WikipediaSuite extends munit.FunSuite:
   def initializeWikipediaRanking(): Boolean =
@@ -71,6 +72,13 @@ class WikipediaSuite extends munit.FunSuite:
       "The given elements are not in descending order"
     )
 
+  test("'occurencesOfLang' should work for an empty RDD") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    val rdd: RDD[WikipediaArticle] = sc.parallelize(Seq())
+    val res = (occurrencesOfLang("C++", rdd) == 0)
+    assert(res, "occurrencesOfLang with an empty RDD should equal 0")
+  }
+
   test("'occurrencesOfLang' should work for (specific) RDD with one element") {
     assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
     val rdd = sc.parallelize(Seq(WikipediaArticle("title", "Java Jakarta")))
@@ -78,13 +86,60 @@ class WikipediaSuite extends munit.FunSuite:
     assert(res, "occurrencesOfLang given (specific) RDD with one element should equal to 1")
   }
 
+  test("'occurencesOfLang' should work for RDD with multiple elements") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    val rdd = sc.parallelize(Seq(
+      WikipediaArticle("title0", "Python for Everybody"),
+      WikipediaArticle("title1", "The C++ Essentials"),
+      WikipediaArticle("title2", "Modern Java"),
+      WikipediaArticle("title3", "Advanced Python features")
+    ))
+    val res = (occurrencesOfLang("Python", rdd) == 2)
+    assert(res, "occurencesOfLang for a multi-element RDD should give 2")
+  }
+
+  test("'rankLangs' should work for an empty RDD") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    val langs = List("Scala", "Java")
+    val rdd: RDD[WikipediaArticle] = sc.parallelize(Seq())
+    val ranked  = rankLangs(langs, rdd)
+    assert(ranked.length == 2)
+    assert(ranked.head._2 == 0 && ranked.tail.head._2 == 0)
+  }
+
+  test("'rankLangs' with no langs") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    val langs: List[String] = List()
+    val rdd = sc.parallelize(List(WikipediaArticle("1", "Scala is great"), WikipediaArticle("2", "Java is OK, but Scala is cooler")))
+    val ranked = rankLangs(langs, rdd)
+    assert(ranked.isEmpty)
+  }
+
   test("'rankLangs' should work for RDD with two elements") {
     assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
     val langs = List("Scala", "Java")
     val rdd = sc.parallelize(List(WikipediaArticle("1", "Scala is great"), WikipediaArticle("2", "Java is OK, but Scala is cooler")))
     val ranked = rankLangs(langs, rdd)
-    val res = ranked.head._1 == "Scala"
-    assert(res)
+    assert(ranked.length == 2)
+    assert(ranked.head._1 == "Scala" && ranked.head._2 == 2)
+    assert(ranked(1)._1 == "Java" && ranked(1)._2 == 1)
+  }
+
+  test("'rankLangs' works for multi-element RDD") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    val langs = List("Python", "Java", "Scala", "C++")
+    val rdd = sc.parallelize(List(
+      WikipediaArticle("0", "Python for everybody"),
+      WikipediaArticle("1", "Scala is better than Python"),
+      WikipediaArticle("2", "C++ is the best, better than Scala and Python"),
+      WikipediaArticle("3", "Random article about music")
+    ))
+    val ranked = rankLangs(langs, rdd)
+    assert(ranked.length == 4)
+    assert(ranked.head._1 == "Python" && ranked.head._2 == 3)
+    assert(ranked(1)._1 == "Scala" && ranked(1)._2 == 2)
+    assert(ranked(2)._1 == "C++" && ranked(2)._2 == 1)
+    assert(ranked(3)._1 == "Java" && ranked(3)._2 == 0)
   }
 
   test("'makeIndex' creates a simple index with two entries") {

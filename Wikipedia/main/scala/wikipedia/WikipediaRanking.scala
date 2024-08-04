@@ -24,16 +24,20 @@ object WikipediaRanking extends WikipediaRankingInterface:
     "JavaScript", "Java", "PHP", "Python", "C#", "C++", "Ruby", "CSS",
     "Objective-C", "Perl", "Scala", "Haskell", "MATLAB", "Clojure", "Groovy")
 
-  val conf: SparkConf = ???
-  val sc: SparkContext = ???
+  val conf: SparkConf = new SparkConf().setAppName("wikipedia").setMaster("local")
+  val sc: SparkContext = new SparkContext(conf)
   // Hint: use a combination of `sc.parallelize`, `WikipediaData.lines` and `WikipediaData.parse`
-  val wikiRdd: RDD[WikipediaArticle] = ???
+  val wikiRdd: RDD[WikipediaArticle] =
+    sc.parallelize(WikipediaData.lines)
+      .map(l => WikipediaData.parse(l))
 
   /** Returns the number of articles on which the language `lang` occurs.
    *  Hint1: consider using method `aggregate` on RDD[T].
    *  Hint2: consider using method `mentionsLanguage` on `WikipediaArticle`
    */
-  def occurrencesOfLang(lang: String, rdd: RDD[WikipediaArticle]): Int = ???
+  def occurrencesOfLang(lang: String, rdd: RDD[WikipediaArticle]): Int =
+    rdd.filter(article => article.mentionsLanguage(lang))
+      .aggregate(0)((currCount, article) => currCount + 1, _ + _)
 
   /* (1) Use `occurrencesOfLang` to compute the ranking of the languages
    *     (`val langs`) by determining the number of Wikipedia articles that
@@ -43,7 +47,11 @@ object WikipediaRanking extends WikipediaRankingInterface:
    *   Note: this operation is long-running. It can potentially run for
    *   several seconds.
    */
-  def rankLangs(langs: List[String], rdd: RDD[WikipediaArticle]): List[(String, Int)] = ???
+  def rankLangs(langs: List[String], rdd: RDD[WikipediaArticle]): List[(String, Int)] = {
+    langs
+      .map(lang => (lang, occurrencesOfLang(lang, rdd)))
+      .sortWith((pair1, pair2) => pair1._2 > pair2._2)
+  }
 
   /* Compute an inverted index of the set of articles, mapping each language
    * to the Wikipedia pages in which it occurs.
