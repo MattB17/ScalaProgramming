@@ -31,10 +31,7 @@ object WikipediaRanking extends WikipediaRankingInterface:
     sc.parallelize(WikipediaData.lines)
       .map(l => WikipediaData.parse(l))
 
-  /** Returns the number of articles on which the language `lang` occurs.
-   *  Hint1: consider using method `aggregate` on RDD[T].
-   *  Hint2: consider using method `mentionsLanguage` on `WikipediaArticle`
-   */
+  /** Returns the number of articles on which the language `lang` occurs. */
   def occurrencesOfLang(lang: String, rdd: RDD[WikipediaArticle]): Int =
     rdd.filter(article => article.mentionsLanguage(lang))
       .aggregate(0)((currCount, article) => currCount + 1, _ + _)
@@ -56,7 +53,13 @@ object WikipediaRanking extends WikipediaRankingInterface:
   /* Compute an inverted index of the set of articles, mapping each language
    * to the Wikipedia pages in which it occurs.
    */
-  def makeIndex(langs: List[String], rdd: RDD[WikipediaArticle]): RDD[(String, Iterable[WikipediaArticle])] = ???
+  def makeIndex(langs: List[String], rdd: RDD[WikipediaArticle]): RDD[(String, Iterable[WikipediaArticle])] = {
+    rdd
+      .flatMap(article => langs
+        .filter(lang => article.mentionsLanguage(lang))
+        .map(lang => (lang, article)))
+      .groupByKey()
+  }
 
   /* (2) Compute the language ranking again, but now using the inverted index. Can you notice
    *     a performance improvement?
@@ -64,7 +67,13 @@ object WikipediaRanking extends WikipediaRankingInterface:
    *   Note: this operation is long-running. It can potentially run for
    *   several seconds.
    */
-  def rankLangsUsingIndex(index: RDD[(String, Iterable[WikipediaArticle])]): List[(String, Int)] = ???
+  def rankLangsUsingIndex(index: RDD[(String, Iterable[WikipediaArticle])]): List[(String, Int)] = {
+    index
+      .map((lang, articles) => (lang, articles.foldLeft(0)((count, article) => count + 1)))
+      .collect()
+      .toList
+      .sortWith(_._2 > _._2)
+  }
 
   /* (3) Use `reduceByKey` so that the computation of the index and the ranking are combined.
    *     Can you notice an improvement in performance compared to measuring *both* the computation of the index

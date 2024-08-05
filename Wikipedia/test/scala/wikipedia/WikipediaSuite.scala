@@ -142,6 +142,45 @@ class WikipediaSuite extends munit.FunSuite:
     assert(ranked(3)._1 == "Java" && ranked(3)._2 == 0)
   }
 
+  test("'makeIndex' creates an empty index when no langs") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    val langs: List[String] = List()
+    val articles = List(
+      WikipediaArticle("1", "Groovy is pretty interesting, and so is Erlang"),
+      WikipediaArticle("2", "Scala and Java run on the JVM"),
+      WikipediaArticle("3", "Scala is not purely functional")
+    )
+    val rdd = sc.parallelize(articles)
+    val index = makeIndex(langs, rdd)
+    val res = index.isEmpty()
+    assert(res)
+  }
+
+
+  test("'makeIndex' creates an empty index when no articles") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    val langs: List[String] = List("Java", "Scala")
+    val articles: Seq[WikipediaArticle] = Seq()
+    val rdd = sc.parallelize(articles)
+    val index = makeIndex(langs, rdd)
+    val res = index.isEmpty()
+    assert(res)
+  }
+
+  test("'makeIndex' creates a one element index") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    val langs = List("Scala")
+    val articles = List(
+      WikipediaArticle("1", "Groovy is pretty interesting, and so is Erlang"),
+      WikipediaArticle("2", "Scala and Java run on the JVM"),
+      WikipediaArticle("3", "Scala is not purely functional")
+    )
+    val rdd = sc.parallelize(articles)
+    val index = makeIndex(langs, rdd)
+    val res = index.count() == 1
+    assert(res)
+  }
+
   test("'makeIndex' creates a simple index with two entries") {
     assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
     val langs = List("Scala", "Java")
@@ -156,6 +195,26 @@ class WikipediaSuite extends munit.FunSuite:
     assert(res)
   }
 
+  test("'rankLangsUsingIndex' should work for an empty RDD") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    val langs = List("Scala", "Java")
+    val rdd: RDD[WikipediaArticle] = sc.parallelize(Seq())
+    val index = makeIndex(langs, rdd)
+    val ranked = rankLangsUsingIndex(index)
+    assert(ranked.isEmpty)
+  }
+
+  test("'rankLangsUsingIndex' with no langs") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    val langs: List[String] = List()
+    val rdd = sc.parallelize(List(
+      WikipediaArticle("1", "Scala is great"),
+      WikipediaArticle("2", "Java is OK, but Scala is cooler")))
+    val index = makeIndex(langs, rdd)
+    val ranked = rankLangsUsingIndex(index)
+    assert(ranked.isEmpty)
+  }
+
   test("'rankLangsUsingIndex' should work for a simple RDD with three elements") {
     assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
     val langs = List("Scala", "Java")
@@ -167,8 +226,26 @@ class WikipediaSuite extends munit.FunSuite:
     val rdd = sc.parallelize(articles)
     val index = makeIndex(langs, rdd)
     val ranked = rankLangsUsingIndex(index)
-    val res = (ranked.head._1 == "Scala")
-    assert(res)
+    assert(ranked.length == 2)
+    assert(ranked.head._1 == "Scala" && ranked.head._2 == 2)
+    assert(ranked(1)._1 == "Java" && ranked(1)._2 == 1)
+  }
+
+  test("'rankLangsUsingIndex' works for multi-element RDD") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    val langs = List("Python", "Java", "Scala", "C++")
+    val rdd = sc.parallelize(List(
+      WikipediaArticle("0", "Python for everybody"),
+      WikipediaArticle("1", "Scala is better than Python"),
+      WikipediaArticle("2", "C++ is the best, better than Scala and Python"),
+      WikipediaArticle("3", "Random article about music")
+    ))
+    val index = makeIndex(langs, rdd)
+    val ranked = rankLangsUsingIndex(index)
+    assert(ranked.length == 3)
+    assert(ranked.head._1 == "Python" && ranked.head._2 == 3)
+    assert(ranked(1)._1 == "Scala" && ranked(1)._2 == 2)
+    assert(ranked(2)._1 == "C++" && ranked(2)._2 == 1)
   }
 
   test("'rankLangsReduceByKey' should work for a simple RDD with five elements") {
