@@ -260,11 +260,44 @@ class WikipediaSuite extends munit.FunSuite:
       )
     val rdd = sc.parallelize(articles)
     val ranked = rankLangsReduceByKey(langs, rdd)
-    val res = (ranked.head._1 == "Java")
-    assert(res)
+    assert(ranked.length == 5)
+    assert(ranked.head._1 == "Java" && ranked.head._2 == 3)
+    assert(ranked(1)._1 == "Scala" && ranked(1)._2 == 2)
+    assert(ranked(2)._2 == 1 && ranked(3)._2 == 1 && ranked(4)._2 == 1)
   }
 
+  test("'rankLangsReduceByKey' should work for an empty RDD") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    val langs = List("Scala", "Java")
+    val rdd: RDD[WikipediaArticle] = sc.parallelize(Seq())
+    val ranked = rankLangsReduceByKey(langs, rdd)
+    assert(ranked.isEmpty)
+  }
 
+  test("'rankLangsReduceByKey' with no langs") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    val langs: List[String] = List()
+    val rdd = sc.parallelize(List(
+      WikipediaArticle("1", "Scala is great"),
+      WikipediaArticle("2", "Java is OK, but Scala is cooler")))
+    val ranked = rankLangsReduceByKey(langs, rdd)
+    assert(ranked.isEmpty)
+  }
+
+  test("'rankLangsReduceByKey' should work for a simple RDD with three elements") {
+    assert(initializeWikipediaRanking(), " -- did you fill in all the values in WikipediaRanking (conf, sc, wikiRdd)?")
+    val langs = List("Scala", "Java")
+    val articles = List(
+      WikipediaArticle("1", "Groovy is pretty interesting, and so is Erlang"),
+      WikipediaArticle("2", "Scala and Java run on the JVM"),
+      WikipediaArticle("3", "Scala is not purely functional")
+    )
+    val rdd = sc.parallelize(articles)
+    val ranked = rankLangsReduceByKey(langs, rdd)
+    assert(ranked.length == 2)
+    assert(ranked.head._1 == "Scala" && ranked.head._2 == 2)
+    assert(ranked(1)._1 == "Java" && ranked(1)._2 == 1)
+  }
 
   import scala.concurrent.duration.given
   override val munitTimeout = 100.seconds
