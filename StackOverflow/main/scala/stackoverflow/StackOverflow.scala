@@ -188,11 +188,14 @@ class StackOverflow extends StackOverflowInterface with Serializable:
   //
 
   /** Main kmeans computation */
-  @tailrec final def kmeans(means: Array[(Int, Int)], vectors: RDD[(Int, Int)], iter: Int = 1, debug: Boolean = false): Array[(Int, Int)] =
-    // TODO: Compute the groups of points that are the closest to each mean,
-    // and then compute the new means of each group of points. Finally, compute
-    // a Map that associate the old `means` values to their new values
-    val newMeansMap: scala.collection.Map[(Int, Int), (Int, Int)] = ???
+  @tailrec
+  final def kmeans(means: Array[(Int, Int)], vectors: RDD[(Int, Int)], iter: Int = 1, debug: Boolean = false): Array[(Int, Int)] =
+    val newMeansMap: scala.collection.Map[(Int, Int), (Int, Int)] = vectors
+      .map(v => (findClosest(v, means), v))
+      .groupByKey()
+      .map((oldMean, points) => (oldMean, averageVectors(points)))
+      .collect()
+      .toMap
     val newMeans: Array[(Int, Int)] = means.map(oldMean => newMeansMap(oldMean))
     val distance = euclideanDistance(means, newMeans)
 
@@ -282,10 +285,24 @@ class StackOverflow extends StackOverflowInterface with Serializable:
     val closestGrouped = closest.groupByKey()
 
     val median = closestGrouped.mapValues { vs =>
-      val langLabel: String   = ??? // most common language in the cluster
-      val langPercent: Double = ??? // percent of the questions in the most common language
-      val clusterSize: Int    = ???
-      val medianScore: Int    = ???
+      val clusterVectors = vs.toList.sortWith(_._2 < _._2)
+      val langCounts = clusterVectors
+        .map((langIdx, score) => langs(langIdx / langSpread))
+        .groupBy(l => l)
+        .map((l, c) => (l, c.size))
+        .toList
+      val mostFreqPair = langCounts.sortWith((lCount1, lCount2) => lCount1._2 > lCount2._2).head
+      val clusterSize: Int    = clusterVectors.size
+      val langLabel: String   = mostFreqPair._1
+      val langPercent: Double = (mostFreqPair._2.toDouble / clusterSize) * 100.0
+      val medianScore: Int    = {
+        val halfSize: Int = clusterSize / 2
+        if (clusterSize % 2 == 1) {
+          clusterVectors(halfSize)._2
+        } else {
+          (clusterVectors(halfSize)._2 + clusterVectors(halfSize - 1)._2) / 2
+        }
+      }
 
       (langLabel, langPercent, clusterSize, medianScore)
     }
