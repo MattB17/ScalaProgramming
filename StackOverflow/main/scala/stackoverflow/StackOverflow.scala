@@ -44,7 +44,7 @@ object StackOverflow extends StackOverflow:
     val grouped = groupedPostings(raw)
     val scored  = scoredPostings(grouped)
     val vectors = vectorPostings(scored)
-//    assert(vectors.count() == 1042132, "Incorrect number of vectors: " + vectors.count())
+    assert(vectors.count() == 1042132, "Incorrect number of vectors: " + vectors.count())
 
     val means   = kmeans(sampleVectors(vectors), vectors, debug = true)
     val results = clusterResults(means, vectors)
@@ -100,7 +100,7 @@ class StackOverflow extends StackOverflowInterface with Serializable:
     val answers = postings
       .filter(posting => posting.postingType == 2)
       .map(posting => (posting.parentId.get, posting))
-    
+
     questions
       .join(answers)
       .groupByKey()
@@ -120,7 +120,10 @@ class StackOverflow extends StackOverflowInterface with Serializable:
         i += 1
       highScore
 
-    ???
+    grouped
+      .mapValues(_.toArray)
+      .filter((qid, ls) => ls.length > 0)
+      .map((qid, ls) => (ls.head._1, answerHighScore(ls.map(_._2))))
 
 
   /** Compute the vectors for the kmeans */
@@ -133,7 +136,10 @@ class StackOverflow extends StackOverflowInterface with Serializable:
           val index = ls.indexOf(lang)
           if (index >= 0) Some(index) else None
 
-    ???
+    scored
+      .map((q, score) => (firstLangInTag(q.tags, langs), score))
+      .filter((firstLang, _) => firstLang.isDefined)
+      .map((firstLang, score) => (firstLang.get * langSpread, score))
 
 
   /** Sample the vectors */

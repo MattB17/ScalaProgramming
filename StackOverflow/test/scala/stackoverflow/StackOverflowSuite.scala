@@ -4,8 +4,10 @@ import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext.*
 import org.apache.spark.rdd.RDD
+import stackoverflow.Aliases._
+
 import java.io.File
-import scala.io.{ Codec, Source }
+import scala.io.{Codec, Source}
 import scala.util.Properties.isWin
 
 object StackOverflowSuite:
@@ -38,8 +40,8 @@ class StackOverflowSuite extends munit.FunSuite:
   }
 
   trait StackPostings {
-    val q0 = Posting(1, 0, None, None, 7, Some("python,testing"))
-    val q1 = Posting(1, 1, Some(5), None, 15, Some("scala"))
+    val q0 = Posting(1, 0, None, None, 7, Some("Python"))
+    val q1 = Posting(1, 1, Some(5), None, 15, Some("Scala"))
     val q2 = Posting(1, 2, None, None, 0, Some("coding"))
 
     val a3 = Posting(2, 3, None, Some(0), 3, Some("mockito"))
@@ -80,6 +82,41 @@ class StackOverflowSuite extends munit.FunSuite:
       assert(result.length == 2)
       assert(result(0)._2.toList.length == 1)
       assert(result(1)._2.toList.length == 3)
+    }
+  }
+
+  test("scoredPostings on empty groupings") {
+    val grouped: RDD[(QID, Iterable[(Question, Answer)])] = sc.parallelize(List())
+    assert(testObject.scoredPostings(grouped).isEmpty())
+  }
+
+  test("scoredPostings on non-empty groupings") {
+    new StackPostings {
+      val grouped = testObject.groupedPostings(postsRdd)
+      val result = testObject.scoredPostings(grouped).collect()
+      assert(result.length == 2)
+      val resultQ0 = result.filter((q, score) => q.id == 0)
+      val resultQ1 = result.filter((q, score) => q.id == 1)
+      assert(resultQ0.head._2 == 3)
+      assert(resultQ1.head._2 == 105)
+    }
+  }
+
+  test("vectorPostings on empty scored") {
+    val scored: RDD[(Question, HighScore)] = sc.parallelize(List())
+    assert(testObject.vectorPostings(scored).isEmpty())
+  }
+
+  test("vectorPostings on non-empty scored") {
+    new StackPostings {
+      val grouped = testObject.groupedPostings(postsRdd)
+      val scored = testObject.scoredPostings(grouped)
+      val result = testObject.vectorPostings(scored).collect()
+      assert(result.length == 2)
+      val resultQ0 = result.filter((idx, score) => idx == 150000)
+      val resultQ1 = result.filter((idx, score) => idx == 500000)
+      assert(resultQ0.head._2 == 3)
+      assert(resultQ1.head._2 == 105)
     }
   }
 
