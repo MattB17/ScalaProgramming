@@ -46,7 +46,7 @@ object TimeUsage extends TimeUsageInterface:
     * @param line Raw fields
     */
   def row(line: List[String]): Row =
-    ???
+    Row.fromSeq(line.head :: line.tail.map(field => field.toDouble))
 
   /** @return The initial data frame columns partitioned in three groups: primary needs (sleeping, eating, etc.),
     *         work and other (leisure activities)
@@ -63,8 +63,29 @@ object TimeUsage extends TimeUsageInterface:
     * 3. other activities (leisure). These are the columns starting with “t02”, “t04”, “t06”, “t07”, “t08”, “t09”,
     *    “t10”, “t12”, “t13”, “t14”, “t15”, “t16” and “t18” (those which are not part of the previous groups only).
     */
-  def classifiedColumns(columnNames: List[String]): (List[Column], List[Column], List[Column]) =
-    ???
+  def classifiedColumns(columnNames: List[String]): (List[Column], List[Column], List[Column]) = {
+    val primaryListSimple = List("t01", "t03", "t11")
+    val primaryListLong = List("t1801", "t1803")
+    val workingListSimple = List("t05")
+    val workingListLong = List("t1805")
+    val otherListSimple = List("t02", "t04", "t06", "t07", "t08", "t09", "t10", "t12", "t13", "t14", "t15", "t16")
+    val otherListLong = List("t18")
+    
+    
+    val primaryNeedsCols = columnNames
+      .filter(c => (primaryListSimple ::: primaryListLong).exists(colPrefix => c.startsWith(colPrefix)))
+      .map(c => functions.col(c))
+    val workingCols = columnNames
+      .filter(c => (workingListSimple ::: workingListLong).exists(colPrefix => c.startsWith(colPrefix)))
+      .map(c => functions.col(c))
+    val otherCols = columnNames
+      .filter(c => otherListSimple.exists(colPrefix => c.startsWith(colPrefix)) ||
+        (otherListLong.exists(colPrefix => c.startsWith(colPrefix)) &&
+          !(primaryListLong ::: workingListLong).exists(colPrefix => c.startsWith(colPrefix))))
+      .map(c => functions.col(c))
+    (primaryNeedsCols, workingCols, otherCols)
+  }
+
 
   /** @return a projection of the initial DataFrame such that all columns containing hours spent on primary needs
     *         are summed together in a single column (and same for work and leisure). The “teage” column is also
