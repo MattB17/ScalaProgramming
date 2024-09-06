@@ -4,9 +4,16 @@ import org.apache.spark.sql.{ColumnName, DataFrame, Row}
 import scala.util.Random
 import scala.util.Properties.isWin
 import org.apache.spark.sql.functions.col
+import org.apache.spark.sql.*
+import org.apache.spark.sql.types.*
 
 class TimeUsageSuite extends munit.FunSuite:
   import TimeUsage.*
+
+  def main(args: Array[String]) = {
+    val spark: SparkSession = SparkSession.builder().appName("Time Usage Test").master("local").getOrCreate()
+    import spark.implicits._
+  }
 
   test("test row method") {
     val result = row(List("hello", "1", "7.5"))

@@ -2,7 +2,9 @@ package timeusage
 
 import org.apache.spark.sql.*
 import org.apache.spark.sql.types.*
-import org.apache.log4j.{Logger, Level}
+import org.apache.log4j.{Level, Logger}
+import org.apache.spark.sql.expressions.Aggregator
+
 import scala.util.Properties.isWin
 
 /** Main class */
@@ -34,7 +36,7 @@ object TimeUsage extends TimeUsageInterface:
     val (columns, initDf) = read("src/main/resources/timeusage/atussum.csv")
     val (primaryNeedsColumns, workColumns, otherColumns) = classifiedColumns(columns)
     val summaryDf = timeUsageSummary(primaryNeedsColumns, workColumns, otherColumns, initDf)
-    val finalDf = timeUsageGrouped(summaryDf)
+    val finalDf = timeUsageGroupedTyped(timeUsageSummaryTyped(summaryDf))
     finalDf.show()
 
   /** @return The read DataFrame along with its column names. */
@@ -70,8 +72,8 @@ object TimeUsage extends TimeUsageInterface:
     val workingListLong = List("t1805")
     val otherListSimple = List("t02", "t04", "t06", "t07", "t08", "t09", "t10", "t12", "t13", "t14", "t15", "t16")
     val otherListLong = List("t18")
-    
-    
+
+
     val primaryNeedsCols = columnNames
       .filter(c => (primaryListSimple ::: primaryListLong).exists(colPrefix => c.startsWith(colPrefix)))
       .map(c => functions.col(c))
@@ -122,25 +124,27 @@ object TimeUsage extends TimeUsageInterface:
     workColumns: List[Column],
     otherColumns: List[Column],
     df: DataFrame
-  ): DataFrame =
-    // Transform the data from the initial dataset into data that make
-    // more sense for our use case
-    // Hint: you can use the `when` and `otherwise` Spark functions
-    // Hint: don’t forget to give your columns the expected name with the `as` method
-    val workingStatusProjection: Column = ???
-    val sexProjection: Column = ???
-    val ageProjection: Column = ???
+  ): DataFrame = {
+    val workingStatusProjection: Column = functions.when(
+        col("telfs").geq(1) && col("telfs").lt(3), "working")
+      .otherwise("not working")
+      .as("working")
+    val sexProjection: Column = functions.when(col("tesex").equalTo(1), "male")
+      .otherwise("female")
+      .as("sex")
+    val ageProjection: Column = functions.when(
+        col("teage").geq(15) && col("teage").leq(22), "young")
+      .when(col("teage").geq(23) && col("teage").leq(55), "active")
+      .otherwise("elder")
+      .as("age")
 
-    // Create columns that sum columns of the initial dataset
-    // Hint: you want to create a complex column expression that sums other columns
-    //       by using the `+` operator between them
-    // Hint: don’t forget to convert the value to hours
-    val primaryNeedsProjection: Column = ???
-    val workProjection: Column = ???
-    val otherProjection: Column = ???
+    val primaryNeedsProjection: Column = (primaryNeedsColumns.reduce(_ + _) / 60).as("primaryNeeds")
+    val workProjection: Column = (workColumns.reduce(_ + _) / 60).as("work")
+    val otherProjection: Column = (otherColumns.reduce(_ + _) / 60).as("other")
     df
       .select(workingStatusProjection, sexProjection, ageProjection, primaryNeedsProjection, workProjection, otherProjection)
-      .where($"telfs" <= 4) // Discard people who are not in labor force
+      .where($"telfs" <= 4)
+  }
 
   /** @return the average daily time (in hours) spent in primary needs, working or leisure, grouped by the different
     *         ages of life (young, active or elder), sex and working status.
@@ -159,8 +163,19 @@ object TimeUsage extends TimeUsageInterface:
     *
     * Finally, the resulting DataFrame should be sorted by working status, sex and age.
     */
-  def timeUsageGrouped(summed: DataFrame): DataFrame =
-    ???
+  def timeUsageGrouped(summed: DataFrame): DataFrame = {
+    val primaryCol = "primaryNeeds"
+    val workCol = "work"
+    val otherCol = "other"
+
+    summed
+      .groupBy("working", "sex", "age")
+      .agg(
+        functions.round(avg(primaryCol), 1).as(primaryCol),
+        functions.round(avg(workCol), 1).as(workCol),
+        functions.round(avg(otherCol), 1).as(otherCol))
+      .orderBy("working", "sex", "age")
+  }
 
   /**
     * @return Same as `timeUsageGrouped`, but using a plain SQL query instead
@@ -174,8 +189,20 @@ object TimeUsage extends TimeUsageInterface:
   /** @return SQL query equivalent to the transformation implemented in `timeUsageGrouped`
     * @param viewName Name of the SQL view to use
     */
-  def timeUsageGroupedSqlQuery(viewName: String): String =
-    ???
+  def timeUsageGroupedSqlQuery(viewName: String): String = {
+    """
+      |SELECT
+      |  working,
+      |  sex,
+      |  age,
+      |  ROUND(AVG(primaryNeeds), 1) AS primaryNeeds,
+      |  ROUND(AVG(work), 1) AS work,
+      |  ROUND(AVG(other), 1) AS other
+      |FROM """.stripMargin + viewName +
+      """
+        |GROUP BY working, age, sex
+        |ORDER BY working, age, sex""".stripMargin
+  }
 
   /**
     * @return A `Dataset[TimeUsageRow]` from the “untyped” `DataFrame`
@@ -184,8 +211,16 @@ object TimeUsage extends TimeUsageInterface:
     * Hint: you should use the `getAs` method of `Row` to look up columns and
     * cast them at the same time.
     */
-  def timeUsageSummaryTyped(timeUsageSummaryDf: DataFrame): Dataset[TimeUsageRow] =
-    ???
+  def timeUsageSummaryTyped(timeUsageSummaryDf: DataFrame): Dataset[TimeUsageRow] = {
+    timeUsageSummaryDf.map(r => TimeUsageRow(
+      r.getAs[String]("working"),
+      r.getAs[String]("sex"),
+      r.getAs[String]("age"),
+      r.getAs[Double]("primaryNeeds"),
+      r.getAs[Double]("work"),
+      r.getAs[Double]("other")
+    ))
+  }
 
   /**
     * @return Same as `timeUsageGrouped`, but using the typed API when possible
@@ -198,8 +233,69 @@ object TimeUsage extends TimeUsageInterface:
     *
     * Hint: you should use the `groupByKey` and `avg` methods.
     */
-  def timeUsageGroupedTyped(summed: Dataset[TimeUsageRow]): Dataset[TimeUsageRow] =
-    ???
+  def timeUsageGroupedTyped(summed: Dataset[TimeUsageRow]): Dataset[TimeUsageRow] = {
+    val primaryNeedsAggregator = new Aggregator[TimeUsageRow, (Double, Int), Double] {
+      def zero: (Double, Int) = (0.0, 0)
+
+      def reduce(curr: (Double, Int), record: TimeUsageRow): (Double, Int) = {
+        (curr._1 + record.primaryNeeds, curr._2 + 1)
+      }
+
+      def merge(curr1: (Double, Int), curr2: (Double, Int)): (Double, Int) = {
+        (curr1._1 + curr2._1, curr1._2 + curr2._2)
+      }
+
+      def finish(r: (Double, Int)): Double = "%.1f".format(r._1 / r._2).toDouble
+
+      override def bufferEncoder: Encoder[(Double, Int)] = Encoders.tuple(Encoders.scalaDouble, Encoders.scalaInt)
+
+      override def outputEncoder: Encoder[Double] = Encoders.scalaDouble
+    }.toColumn
+    val workAggregator = new Aggregator[TimeUsageRow, (Double, Int), Double] {
+      def zero: (Double, Int) = (0.0, 0)
+
+      def reduce(curr: (Double, Int), record: TimeUsageRow): (Double, Int) = {
+        (curr._1 + record.work, curr._2 + 1)
+      }
+
+      def merge(curr1: (Double, Int), curr2: (Double, Int)): (Double, Int) = {
+        (curr1._1 + curr2._1, curr1._2 + curr2._2)
+      }
+
+      def finish(r: (Double, Int)): Double = "%.1f".format(r._1 / r._2).toDouble
+
+      override def bufferEncoder: Encoder[(Double, Int)] = Encoders.tuple(Encoders.scalaDouble, Encoders.scalaInt)
+
+      override def outputEncoder: Encoder[Double] = Encoders.scalaDouble
+    }.toColumn
+
+    val otherAggregator = new Aggregator[TimeUsageRow, (Double, Int), Double] {
+      def zero: (Double, Int) = (0.0, 0)
+
+      def reduce(curr: (Double, Int), record: TimeUsageRow): (Double, Int) = {
+        (curr._1 + record.other, curr._2 + 1)
+      }
+
+      def merge(curr1: (Double, Int), curr2: (Double, Int)): (Double, Int) = {
+        (curr1._1 + curr2._1, curr1._2 + curr2._2)
+      }
+
+      def finish(r: (Double, Int)): Double = "%.1f".format(r._1 / r._2).toDouble
+
+      override def bufferEncoder: Encoder[(Double, Int)] = Encoders.tuple(Encoders.scalaDouble, Encoders.scalaInt)
+
+      override def outputEncoder: Encoder[Double] = Encoders.scalaDouble
+    }.toColumn
+
+    summed
+      .groupByKey(tur => (tur.working, tur.sex, tur.age))
+      .agg(
+        primaryNeedsAggregator.as[Double],
+        workAggregator.as[Double],
+        otherAggregator.as[Double])
+      .map(r => TimeUsageRow(r._1._1, r._1._2, r._1._3, r._2, r._3, r._4))
+      .orderBy("working", "age", "sex")
+  }
 
 /**
   * Models a row of the summarized data set
