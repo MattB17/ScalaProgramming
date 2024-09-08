@@ -1,7 +1,6 @@
 package observatory
 
-import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
-import org.apache.spark.sql.{Encoder, Encoders, SparkSession}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.types.*
 import org.apache.spark.sql.functions.*
 
@@ -27,20 +26,54 @@ object Extraction extends ExtractionInterface:
   private val dayCol = "Day"
   private val tempCol = "Temperature"
 
-  private val stationsSchema: StructType = StructType(Seq(
-    StructField(stnIdCol, StringType, true),
-    StructField(wbanIdCol, StringType, true),
-    StructField(latCol, StringType, true),
-    StructField(longCol, StringType, true)
-  ))
+  import spark.implicits._
+  import scala3encoders.given
 
-  private val temperatureSchema: StructType = StructType(Seq(
-    StructField(stnIdCol, StringType, true),
-    StructField(wbanIdCol, StringType, true),
-    StructField(monthCol, StringType, true),
-    StructField(dayCol, StringType, true),
-    StructField(tempCol, StringType, true)
-  ))
+  /**
+   * 
+   * @param stationsFile   Path of the stations resource file to use
+   * @return A DataFrame representing the data in stationsFile
+   */
+  private def loadStations(stationsFile: String): DataFrame = {
+    val stationsSchema: StructType = StructType(Seq(
+      StructField(stnIdCol, StringType, true),
+      StructField(wbanIdCol, StringType, true),
+      StructField(latCol, DoubleType, true),
+      StructField(longCol, DoubleType, true)
+    ))
+
+    val stations = Source.fromInputStream(Extraction.getClass.getResourceAsStream(stationsFile), "utf-8")
+    val stationsData = stations.getLines().toList
+    stations.close()
+    spark.read
+      .schema(stationsSchema)
+      .csv(spark.sparkContext.parallelize(stationsData).toDS)
+      .filter(col(latCol).isNotNull && col(longCol).isNotNull)
+  }
+
+  /**
+   * 
+   * @param temperaturesFile   Path of the temperatures resource file to use
+   * @return A DataFrame representing the data in temperaturesFile
+   */
+  private def loadTemperatures(temperaturesFile: String): DataFrame = {
+    val temperatureSchema: StructType = StructType(Seq(
+      StructField(stnIdCol, StringType, true),
+      StructField(wbanIdCol, StringType, true),
+      StructField(monthCol, IntegerType, true),
+      StructField(dayCol, IntegerType, true),
+      StructField(tempCol, DoubleType, true)
+    ))
+
+    val temperatures = Source.fromInputStream(Extraction.getClass.getResourceAsStream(temperaturesFile), "utf-8")
+    val tempData = temperatures.getLines().toList
+    temperatures.close()
+    spark.read
+      .schema(temperatureSchema)
+      .csv(spark.sparkContext.parallelize(tempData).toDS)
+      .withColumn(tempCol, (col(tempCol).cast("double") - lit(32)) * lit(5.toDouble / 9))
+  }
+  
   /**
     * @param year             Year number
     * @param stationsFile     Path of the stations resource file to use (e.g. "/stations.csv")
@@ -50,37 +83,16 @@ object Extraction extends ExtractionInterface:
   def locateTemperatures(year: Year,
                          stationsFile: String,
                          temperaturesFile: String): Iterable[(LocalDate, Location, Temperature)] = {
-    import spark.implicits._
-    import scala3encoders.given
-
     val yearCol = "Year"
-
-    val stations = Source.fromInputStream(Extraction.getClass.getResourceAsStream(stationsFile), "utf-8")
-    val stationsData = stations.getLines().toList
-    stations.close()
-    val stationDF = spark.read
-      .schema(stationsSchema)
-      .csv(spark.sparkContext.parallelize(stationsData).toDS)
-      .withColumn(latCol, col(latCol).cast("double"))
-      .withColumn(longCol, col(longCol).cast("double"))
-      .filter(col(latCol).isNotNull && col(longCol).isNotNull)
-
-
-    val temperatures = Source.fromInputStream(Extraction.getClass.getResourceAsStream(temperaturesFile), "utf-8")
-    val tempData = temperatures.getLines().toList
-    temperatures.close()
-    val temperaturesDF = spark.read
-      .schema(temperatureSchema)
-      .csv(spark.sparkContext.parallelize(tempData).toDS)
-      .withColumn(monthCol, col(monthCol).cast("integer"))
-      .withColumn(dayCol, col(monthCol).cast("integer"))
-      .withColumn(tempCol, (col(tempCol).cast("double") - lit(32)) * lit(5.toDouble / 9))
+    
+    val stationDF = loadStations(stationsFile)
+    val temperaturesDF = loadTemperatures(temperaturesFile)
 
     val joinedDF = stationDF
       .join(
         temperaturesDF,
-        stationDF.col(stnIdCol).equalTo(temperaturesDF.col(stnIdCol)) &&
-          stationDF.col(wbanIdCol).equalTo(temperaturesDF.col(wbanIdCol)),
+        stationDF.col(stnIdCol).eqNullSafe(temperaturesDF.col(stnIdCol)) &&
+          stationDF.col(wbanIdCol).eqNullSafe(temperaturesDF.col(wbanIdCol)),
         "inner")
       .withColumn(yearCol, lit(year).cast("integer"))
       .select(yearCol, monthCol, dayCol, latCol, longCol, tempCol)
@@ -98,8 +110,10 @@ object Extraction extends ExtractionInterface:
     * @param records A sequence containing triplets (date, location, temperature)
     * @return A sequence containing, for each location, the average temperature over the year.
     */
-  def locationYearlyAverageRecords(records: Iterable[(LocalDate, Location, Temperature)]): Iterable[(Location, Temperature)] =
-    ???
-
-
-case class StationRow(stnId: String, wbanId: String, lat: Double, long: Double)
+  def locationYearlyAverageRecords(records: Iterable[(LocalDate, Location, Temperature)]): Iterable[(Location, Temperature)] = {
+    spark.sparkContext.parallelize(records.toSeq)
+      .map((lDate, loc, temp) => (loc, temp))
+      .groupByKey()
+      .mapValues(tempIter => tempIter.sum / tempIter.size)
+      .collect()
+  }
