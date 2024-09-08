@@ -6,6 +6,19 @@ import java.time.LocalDate
 trait ExtractionTest extends MilestoneSuite:
   private val milestoneTest = namedMilestoneTest("data extraction", 1) _
 
+  test("locateTemperatures") {
+    val expectedSeq: Iterable[(LocalDate, Location, Temperature)] = IndexedSeq(
+      (LocalDate.of(2024, 5, 29), Location(20, 20), -5),
+      (LocalDate.of(2024, 9, 8), Location(15, 34), 0),
+      (LocalDate.of(2024, 1, 1), Location(12, 15), 5),
+      (LocalDate.of(2024, 3, 17), Location(-5, 10), 10))
+    assertEquals(
+      locateTemperatures(2024, "/stationData.csv", "/tempData.csv")
+        .toSeq
+        .sortWith((a, b) => a._3 < b._3),
+      expectedSeq.toSeq)
+  }
+
   test("locationYearlyAverageRecords with empty iterable") {
     val inputSeq: Iterable[(LocalDate, Location, Temperature)] = IndexedSeq()
     val expectedSeq: Iterable[(Location, Temperature)] = IndexedSeq()
