@@ -28,4 +28,24 @@ trait VisualizationTest extends MilestoneSuite:
     assertEqualsDouble(greatCircleDistanceAngle(loc0, loc1), 1.830835, 0.0001)
   }
 
+  test("predictTemperature list has length 1 should just give the temperature") {
+    val loc0 = Location(10, 10)
+    val loc1 = Location(20, 100)
+    val loc2 = Location(10.1, 10.0)
+    val temps0: Iterable[(Location, Temperature)] = IndexedSeq((loc1, 20))
+    assertEqualsDouble(predictTemperature(temps0, loc0), 20.0, 0.001)
+
+    val temps1: Iterable[(Location, Temperature)] = IndexedSeq((loc2, -5))
+    assertEqualsDouble(predictTemperature(temps1, loc0), -5.0, 0.001)
+  }
+
+  test("predictTemperature should give temp of close point") {
+    val loc = Location(10, 10)
+    val temps: Iterable[(Location, Temperature)] = IndexedSeq(
+      (Location(-20, -10), -10.5),
+      (Location(0, 0), 45),
+      (loc, 30))
+    assertEqualsDouble(predictTemperature(temps, loc), 30.0, 0.001)
+  }
+
 

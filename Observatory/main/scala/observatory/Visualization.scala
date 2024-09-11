@@ -4,6 +4,8 @@ import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.pixels.Pixel
 import com.sksamuel.scrimage.metadata.ImageMetadata
 import com.sksamuel.scrimage.implicits.given
+
+import scala.annotation.tailrec
 import scala.collection.parallel.CollectionConverters.given
 
 /**
@@ -11,6 +13,7 @@ import scala.collection.parallel.CollectionConverters.given
   */
 object Visualization extends VisualizationInterface:
 
+  private val earthRadiusKm = 6371
   /**
    * The great circle distance calculation is used to calculate the
    * distance between 2 points on a sphere where in this case the Earth
@@ -42,8 +45,27 @@ object Visualization extends VisualizationInterface:
     * @param location Location where to predict the temperature
     * @return The predicted temperature at `location`
     */
-  def predictTemperature(temperatures: Iterable[(Location, Temperature)], location: Location): Temperature =
-    ???
+  def predictTemperature(temperatures: Iterable[(Location, Temperature)], location: Location): Temperature = {
+    @tailrec
+    def predictTemperatureHelper(remTemps: Iterable[(Location, Temperature)],
+                                 numerator: Double,
+                                 denominator: Double): Temperature = {
+      if (remTemps.isEmpty) {
+        numerator / denominator
+      } else {
+        val (loc, temp) = remTemps.head
+        val dist = earthRadiusKm * greatCircleDistanceAngle(location, loc)
+        if (dist < 1.0) {
+          temp
+        } else {
+          val w = 1.0 / dist
+          predictTemperatureHelper(remTemps.tail, numerator + (w * temp), denominator + w)
+        }
+      }
+    }
+
+    predictTemperatureHelper(temperatures, 0.0, 0.0)
+  }
 
   /**
     * @param points Pairs containing a value and its associated color
