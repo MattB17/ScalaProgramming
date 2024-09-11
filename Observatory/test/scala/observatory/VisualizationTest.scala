@@ -57,4 +57,69 @@ trait VisualizationTest extends MilestoneSuite:
     assertEqualsDouble(predictTemperature(temps, loc), 20.943003, 0.001)
   }
 
+  test("getLinearInterpolation predicts left point") {
+    assertEquals(getLinearInterpolation(4, 4, 110, 10.5, 30), 110)
+  }
+
+  test("getLinearInterpolation predicts right point") {
+    assertEquals(getLinearInterpolation(5, 1, 45, 5, 60), 60)
+  }
+
+  test("getLinearInterpolation between two points") {
+    assertEquals(getLinearInterpolation(3, 1, 20, 5, 10), 15)
+    assertEquals(getLinearInterpolation(3.5, 1, 5, 5, 25), 18)
+  }
+
+  test("interpolateColor only one color with same temperature") {
+    val col = Color(200, 125, 130)
+    val points: Iterable[(Temperature, Color)] = IndexedSeq((20, col))
+    assertEquals(interpolateColor(points, 20), col)
+  }
+
+  test("interpolateColor only one color with greater temperature") {
+    val col = Color(150, 0, 30)
+    val points: Iterable[(Temperature, Color)] = IndexedSeq((20, col))
+    assertEquals(interpolateColor(points, 5), col)
+  }
+
+  test("interpolateColor multiple colors with greater temperature") {
+    val col = Color(125, 101, 130)
+    val points: Iterable[(Temperature, Color)] = IndexedSeq(
+      (5, col),
+      (20, Color(200, 200, 200)))
+    assertEquals(interpolateColor(points, 3), col)
+  }
+
+  test("interpolateColor only one color with smaller temperature") {
+    val col = Color(255, 255, 255)
+    val points: Iterable[(Temperature, Color)] = IndexedSeq((-10, col))
+    assertEquals(interpolateColor(points, 5), col)
+  }
+
+  test("interpolateColor multiple colors with smaller temperature") {
+    val col = Color(111, 25, 48)
+    val points: Iterable[(Temperature, Color)] = IndexedSeq(
+      (-1, Color(50, 50, 50)),
+      (1, col),
+      (-0.5, Color(75, 75, 75)))
+    assertEquals(interpolateColor(points, 3), col)
+  }
+
+  test("interpolateColor with one color above and below") {
+    val points: Iterable[(Temperature, Color)] = IndexedSeq(
+      (5, Color(0, 0, 0)),
+      (1, Color(255, 0, 255)))
+    assertEquals(interpolateColor(points, 3), Color(128, 0, 128))
+  }
+
+  test("interpolateColor multiple colors above and below") {
+    val points: Iterable[(Temperature, Color)] = IndexedSeq(
+      (-1, Color(50, 50, 50)),
+      (-0.5, Color(75, 75, 75)),
+      (1, Color(99, 99, 99)),
+      (5, Color(101, 101, 101)),
+      (15, Color(150, 150, 150)))
+    assertEquals(interpolateColor(points, 3), Color(100, 100, 100))
+  }
+
 

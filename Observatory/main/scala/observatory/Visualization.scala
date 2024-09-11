@@ -66,12 +66,48 @@ object Visualization extends VisualizationInterface:
   }
 
   /**
+   * The linear interpolation between (x0, y0), (x1, y1) for x
+   * @param x The point for which we want the interpolation
+   * @param x0 The x value of the point to the left of x used for interpolation
+   * @param y0 The y value of the point to the left of x used for interpolation
+   * @param x1 The x value of the point to the right of x used for interpolation
+   * @param y1 The y value of the point to the right of x used for interpolation
+   * @return
+   */
+  def getLinearInterpolation(x: Double, x0: Double, y0: Int, x1: Double, y1: Int): Int = {
+    val int0 = y0 * (x1 - x)
+    val int1 = y1 * (x - x0)
+    val dist = (x1 - x0)
+    math.round(((int0 + int1) / dist).toFloat)
+  }
+
+  /**
     * @param points Pairs containing a value and its associated color
     * @param value The value to interpolate
     * @return The color that corresponds to `value`, according to the color scale defined by `points`
     */
-  def interpolateColor(points: Iterable[(Temperature, Color)], value: Temperature): Color =
-    ???
+  def interpolateColor(points: Iterable[(Temperature, Color)], value: Temperature): Color = {
+    val greaterTemps = points
+      .filter((temp, color) => temp >= value)
+      .toList
+      .sortWith((pair1, pair2) => pair1._1 < pair2._1)
+    val lessTemps = points
+      .filter((temp, color) => temp < value)
+      .toList
+      .sortWith((pair1, pair2) => pair1._1 > pair2._1)
+    if (greaterTemps.isEmpty) {
+      lessTemps.head._2
+    } else if (lessTemps.isEmpty) {
+      greaterTemps.head._2
+    } else {
+      val (temp0, color0) = lessTemps.head
+      val (temp1, color1) = greaterTemps.head
+      val redResult = getLinearInterpolation(value, temp0, color0.red, temp1, color1.red)
+      val greenResult = getLinearInterpolation(value, temp0, color0.green, temp1, color1.green)
+      val blueResult = getLinearInterpolation(value, temp0, color0.blue, temp1, color1.blue)
+      Color(redResult, greenResult, blueResult)
+    }
+  }
 
   /**
     * @param temperatures Known temperatures
