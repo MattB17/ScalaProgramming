@@ -48,4 +48,13 @@ trait VisualizationTest extends MilestoneSuite:
     assertEqualsDouble(predictTemperature(temps, loc), 30.0, 0.001)
   }
 
+  test("predictTemperature with no close temperature") {
+    val loc = Location(10, 10)
+    val temps: Iterable[(Location, Temperature)] = IndexedSeq(
+      (Location(20, 120), 20),
+      (Location(-10, -170), 5),
+      (Location(50, 50), 26))
+    assertEqualsDouble(predictTemperature(temps, loc), 20.943003, 0.001)
+  }
+
 

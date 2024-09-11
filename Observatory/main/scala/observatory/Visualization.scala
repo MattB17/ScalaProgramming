@@ -7,6 +7,7 @@ import com.sksamuel.scrimage.implicits.given
 
 import scala.annotation.tailrec
 import scala.collection.parallel.CollectionConverters.given
+import scala.collection.parallel.immutable.ParIterable
 
 /**
   * 2nd milestone: basic visualization
@@ -41,30 +42,27 @@ object Visualization extends VisualizationInterface:
   }
 
   /**
+    * Predicts the temperature of `location` using `temperatures`. The temperature is a weighted average of
+    * the temperatures where the weight is the inverse of the distance. We apply one modification where if the
+    * distance is less than 1 for any location we just approximate the temperature with the temperature at that
+    * location.
+    *
     * @param temperatures Known temperatures: pairs containing a location and the temperature at this location
     * @param location Location where to predict the temperature
     * @return The predicted temperature at `location`
     */
   def predictTemperature(temperatures: Iterable[(Location, Temperature)], location: Location): Temperature = {
-    @tailrec
-    def predictTemperatureHelper(remTemps: Iterable[(Location, Temperature)],
-                                 numerator: Double,
-                                 denominator: Double): Temperature = {
-      if (remTemps.isEmpty) {
-        numerator / denominator
-      } else {
-        val (loc, temp) = remTemps.head
-        val dist = earthRadiusKm * greatCircleDistanceAngle(location, loc)
-        if (dist < 1.0) {
-          temp
-        } else {
-          val w = 1.0 / dist
-          predictTemperatureHelper(remTemps.tail, numerator + (w * temp), denominator + w)
-        }
-      }
+    val distances = temperatures.par
+      .map((loc, temp) => (earthRadiusKm * greatCircleDistanceAngle(location, loc), temp))
+    val closeDistances = distances.filter((dist, temp) => dist < 1)
+    if (closeDistances.nonEmpty) {
+      closeDistances.head._2
+    } else {
+      val weights = distances.map((dist, temp) => ((1 / dist), temp))
+      val numerator = weights.aggregate[Double](0.0)((currNum, pair) => currNum + (pair._1 * pair._2), _ + _)
+      val denominator = weights.aggregate[Double](0.0)((currNum, pair) => currNum + pair._1, _ + _)
+      numerator / denominator
     }
-
-    predictTemperatureHelper(temperatures, 0.0, 0.0)
   }
 
   /**
