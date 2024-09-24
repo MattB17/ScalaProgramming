@@ -110,11 +110,32 @@ object Visualization extends VisualizationInterface:
   }
 
   /**
+   * Computes the pixel at (x, y) based on the weather station `temperatures` and `colors`.
+   * @param x The x coordinate of the pixel
+   * @param y The y coordinate of the pixe
+   * @param temperatures An Iterable of Location and Temperature pairs specifying the temperatures
+   *                     at the locations of the weather stations
+   * @param colors An Iterable of Temperature and Color pairs specifying the color scale for coloring temperatures
+   * @return a pixel for (x, y) based on `temperatures` and `colors`
+   */
+  def computePixel(x: Int,
+                   y: Int,
+                   temperatures: Iterable[(Location, Temperature)],
+                   colors: Iterable[(Temperature, Color)]): Pixel = {
+    val loc = Location(90.0 - x, y - 180.0)
+    val temp = predictTemperature(temperatures, loc)
+    val pixelColor = interpolateColor(colors, temp)
+    Pixel(x, y, pixelColor.red, pixelColor.green, pixelColor.blue, 255)
+  }
+
+  /**
     * @param temperatures Known temperatures
     * @param colors Color scale
     * @return A 360×180 image where each pixel shows the predicted temperature at its location
     */
-  def visualize(temperatures: Iterable[(Location, Temperature)], colors: Iterable[(Temperature, Color)]): ImmutableImage =
+  def visualize(temperatures: Iterable[(Location, Temperature)],
+                colors: Iterable[(Temperature, Color)]): ImmutableImage =
     ???
+
 
 

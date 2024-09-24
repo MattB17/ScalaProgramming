@@ -1,6 +1,7 @@
 package observatory
 
 import Visualization.*
+import com.sksamuel.scrimage.pixels.Pixel
 
 trait VisualizationTest extends MilestoneSuite:
   private val milestoneTest = namedMilestoneTest("raw data display", 2) _
@@ -120,6 +121,52 @@ trait VisualizationTest extends MilestoneSuite:
       (5, Color(101, 101, 101)),
       (15, Color(150, 150, 150)))
     assertEquals(interpolateColor(points, 3), Color(100, 100, 100))
+  }
+
+  test("computePixel one temp and one color") {
+    val temps: Iterable[(Location, Temperature)] = IndexedSeq(
+      (Location(10, 10), 20))
+    val colors: Iterable[(Temperature, Color)] = IndexedSeq((20, Color(100, 100, 100)))
+
+    val expectedPixel = Pixel(180, 90, 100, 100, 100, 255)
+    assertEquals(computePixel(180, 90, temps, colors), expectedPixel)
+  }
+
+  test("computePixel multiple temps and one color") {
+    val temps: Iterable[(Location, Temperature)] = IndexedSeq(
+      (Location(20, 120), 20),
+      (Location(-10, -170), 5),
+      (Location(50, 50), 26))
+    val colors: Iterable[(Temperature, Color)] = IndexedSeq((5, Color(94, 123, 240)))
+
+    val expectedPixel = Pixel(120, 0, 94, 123, 240, 255)
+    assertEquals(computePixel(120, 0, temps, colors), expectedPixel)
+  }
+
+  test("computePixel one temp and multiple colors") {
+    val temps: Iterable[(Location, Temperature)] = IndexedSeq((Location(20, 100), 3))
+    val colors: Iterable[(Temperature, Color)] = IndexedSeq(
+      (-1, Color(50, 50, 50)),
+      (-0.5, Color(75, 75, 75)),
+      (1, Color(99, 99, 99)),
+      (5, Color(101, 101, 101)),
+      (15, Color(150, 150, 150)))
+
+    val expectedPixel = Pixel(20, 20, 100, 100, 100, 255)
+    assertEquals(computePixel(20, 20, temps, colors), expectedPixel)
+  }
+
+  test("computePixel multiple temps and multiple colors") {
+    val loc = Location(10, 10)
+    val temps: Iterable[(Location, Temperature)] = IndexedSeq(
+      (Location(-20, -10), -10.5),
+      (Location(0, 0), 45),
+      (loc, 30))
+    val colors: Iterable[(Temperature, Color)] = IndexedSeq(
+      (50, Color(0, 0, 0)),
+      (10, Color(255, 0, 255)))
+    val expectedPixel = Pixel(80, 190, 128, 0, 128, 255)
+    assertEquals(computePixel(80, 190, temps, colors), expectedPixel)
   }
 
 
