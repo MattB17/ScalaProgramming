@@ -5,9 +5,7 @@ import com.sksamuel.scrimage.pixels.Pixel
 import com.sksamuel.scrimage.metadata.ImageMetadata
 import com.sksamuel.scrimage.implicits.given
 
-import scala.annotation.tailrec
 import scala.collection.parallel.CollectionConverters.given
-import scala.collection.parallel.immutable.ParIterable
 
 /**
   * 2nd milestone: basic visualization
@@ -54,7 +52,10 @@ object Visualization extends VisualizationInterface:
   def predictTemperature(temperatures: Iterable[(Location, Temperature)], location: Location): Temperature = {
     val distances = temperatures.par
       .map((loc, temp) => (earthRadiusKm * greatCircleDistanceAngle(location, loc), temp))
-    val closeDistances = distances.filter((dist, temp) => dist < 1)
+    val closeDistances = distances
+      .filter((dist, temp) => dist < 1)
+      .toList
+      .sortWith((p1, p2) => p1._1 < p2._1)
     if (closeDistances.nonEmpty) {
       closeDistances.head._2
     } else {
@@ -97,7 +98,7 @@ object Visualization extends VisualizationInterface:
       .sortWith((pair1, pair2) => pair1._1 > pair2._1)
     if (greaterTemps.isEmpty) {
       lessTemps.head._2
-    } else if (lessTemps.isEmpty) {
+    } else if (greaterTemps.head._1 == value || lessTemps.isEmpty) {
       greaterTemps.head._2
     } else {
       val (temp0, color0) = lessTemps.head
@@ -112,7 +113,7 @@ object Visualization extends VisualizationInterface:
   /**
    * Computes the pixel at (x, y) based on the weather station `temperatures` and `colors`.
    * @param x The x coordinate of the pixel
-   * @param y The y coordinate of the pixe
+   * @param y The y coordinate of the pixel
    * @param temperatures An Iterable of Location and Temperature pairs specifying the temperatures
    *                     at the locations of the weather stations
    * @param colors An Iterable of Temperature and Color pairs specifying the color scale for coloring temperatures
@@ -122,7 +123,7 @@ object Visualization extends VisualizationInterface:
                    y: Int,
                    temperatures: Iterable[(Location, Temperature)],
                    colors: Iterable[(Temperature, Color)]): Pixel = {
-    val loc = Location(90.0 - x, y - 180.0)
+    val loc = Location(90 - x, y - 180)
     val temp = predictTemperature(temperatures, loc)
     val pixelColor = interpolateColor(colors, temp)
     Pixel(x, y, pixelColor.red, pixelColor.green, pixelColor.blue, 255)
@@ -134,8 +135,17 @@ object Visualization extends VisualizationInterface:
     * @return A 360×180 image where each pixel shows the predicted temperature at its location
     */
   def visualize(temperatures: Iterable[(Location, Temperature)],
-                colors: Iterable[(Temperature, Color)]): ImmutableImage =
-    ???
+                colors: Iterable[(Temperature, Color)]): ImmutableImage = {
+    val w = 360
+    val h = 180
+    val pixels =
+      for
+        x <- 0 until h
+        y <- 0 until w
+      yield computePixel(x, y, temperatures, colors)
+
+    ImmutableImage.wrapPixels(w, h, pixels.toArray, ImageMetadata.empty)
+  }
 
 
 

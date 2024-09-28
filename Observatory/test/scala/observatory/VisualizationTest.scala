@@ -169,4 +169,57 @@ trait VisualizationTest extends MilestoneSuite:
     assertEquals(computePixel(80, 190, temps, colors), expectedPixel)
   }
 
+  test("visualize with one temp and one color") {
+    val temps: Iterable[(Location, Temperature)] = IndexedSeq(
+      (Location(10, 10), 20))
+    val colors: Iterable[(Temperature, Color)] = IndexedSeq((20, Color(100, 100, 100)))
+
+    val result = visualize(temps, colors)
+    assert(result.forAll(p => p.red() == 100 && p.blue() == 100 && p.green() == 100 && p.alpha() == 255))
+  }
+
+  test("visualize multiple temps and one color") {
+    val temps: Iterable[(Location, Temperature)] = IndexedSeq(
+      (Location(20, 120), 20),
+      (Location(-10, -170), 5),
+      (Location(50, 50), 26))
+    val colors: Iterable[(Temperature, Color)] = IndexedSeq((5, Color(94, 123, 240)))
+
+    val result = visualize(temps, colors)
+    assert(result.forAll(p => p.red() == 94 && p.green() == 123 && p.blue() == 240 && p.alpha() == 255))
+  }
+
+  test("visualize one temp and multiple colors") {
+    val temps: Iterable[(Location, Temperature)] = IndexedSeq((Location(20, 100), 3))
+    val colors: Iterable[(Temperature, Color)] = IndexedSeq(
+      (-1, Color(50, 50, 50)),
+      (-0.5, Color(75, 75, 75)),
+      (1, Color(99, 99, 99)),
+      (5, Color(101, 101, 101)),
+      (15, Color(150, 150, 150)))
+
+    val result = visualize(temps, colors)
+    assert(result.forAll(p => p.red() == 100 && p.blue() == 100 && p.green() == 100 && p.alpha() == 255))
+  }
+
+  test("visualize multiple temps and multiple colors") {
+    val temps: Iterable[(Location, Temperature)] = IndexedSeq(
+      (Location(90.0, -180.0), 30),
+      (Location(-89.0, 179.0), -30))
+    val colors: Iterable[(Temperature, Color)] = IndexedSeq(
+      (-30, Color(255, 0, 0)),
+      (30, Color(0, 0, 255)))
+
+    val result = visualize(temps, colors)
+    result.forEach(p => {
+      val lat = 90 - p.x
+      val longitude = p.y - 180
+      if (lat <= longitude) {
+        p.red() >= 128 && p.blue() <= 128
+      } else {
+        p.red() <= 128 && p.blue() >= 128
+      }
+    })
+  }
+
 
