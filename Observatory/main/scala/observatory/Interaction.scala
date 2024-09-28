@@ -11,11 +11,19 @@ import scala.collection.parallel.CollectionConverters.given
 object Interaction extends InteractionInterface:
 
   /**
+    * We convert a Tile to a Location using the Mercator projection:
+    * https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Mathematics
+    *
     * @param tile Tile coordinates
     * @return The latitude and longitude of the top-left corner of the tile, as per http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
     */
-  def tileLocation(tile: Tile): Location =
-    ???
+  def tileLocation(tile: Tile): Location = {
+    val adj = math.pow(2, tile.zoom)
+    val lon = tile.x / adj * 360 - 180
+    val a = math.Pi - ((tile.y / adj) * 2 * math.Pi)
+    val lat = math.atan(math.sinh(a))
+    Location(math.toDegrees(lat), lon)
+  }
 
   /**
     * @param temperatures Known temperatures

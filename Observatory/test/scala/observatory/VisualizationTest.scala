@@ -175,6 +175,8 @@ trait VisualizationTest extends MilestoneSuite:
     val colors: Iterable[(Temperature, Color)] = IndexedSeq((20, Color(100, 100, 100)))
 
     val result = visualize(temps, colors)
+    assertEquals(result.height, 180)
+    assertEquals(result.width, 360)
     assert(result.forAll(p => p.red() == 100 && p.blue() == 100 && p.green() == 100 && p.alpha() == 255))
   }
 
@@ -186,6 +188,8 @@ trait VisualizationTest extends MilestoneSuite:
     val colors: Iterable[(Temperature, Color)] = IndexedSeq((5, Color(94, 123, 240)))
 
     val result = visualize(temps, colors)
+    assertEquals(result.height, 180)
+    assertEquals(result.width, 360)
     assert(result.forAll(p => p.red() == 94 && p.green() == 123 && p.blue() == 240 && p.alpha() == 255))
   }
 
@@ -199,6 +203,8 @@ trait VisualizationTest extends MilestoneSuite:
       (15, Color(150, 150, 150)))
 
     val result = visualize(temps, colors)
+    assertEquals(result.height, 180)
+    assertEquals(result.width, 360)
     assert(result.forAll(p => p.red() == 100 && p.blue() == 100 && p.green() == 100 && p.alpha() == 255))
   }
 
@@ -211,6 +217,8 @@ trait VisualizationTest extends MilestoneSuite:
       (30, Color(0, 0, 255)))
 
     val result = visualize(temps, colors)
+    assertEquals(result.height, 180)
+    assertEquals(result.width, 360)
     result.forEach(p => {
       val lat = 90 - p.x
       val longitude = p.y - 180
