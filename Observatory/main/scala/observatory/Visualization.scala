@@ -138,13 +138,17 @@ object Visualization extends VisualizationInterface:
                 colors: Iterable[(Temperature, Color)]): ImmutableImage = {
     val w = 360
     val h = 180
-    val pixels =
+    val pixelCoords =
       for
         x <- 0 until h
         y <- 0 until w
-      yield computePixel(x, y, temperatures, colors)
+      yield (x, y)
 
-    ImmutableImage.wrapPixels(w, h, pixels.toArray, ImageMetadata.empty)
+    val pixelArray = pixelCoords
+      .par
+      .map((x, y) => computePixel(x, y, temperatures, colors))
+      .toArray
+    ImmutableImage.wrapPixels(w, h, pixelArray, ImageMetadata.empty)
   }
 
 
