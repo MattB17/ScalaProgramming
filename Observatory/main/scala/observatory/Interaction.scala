@@ -66,7 +66,15 @@ object Interaction extends InteractionInterface:
     */
   def generateTiles[Data](
     yearlyData: Iterable[(Year, Data)],
-    generateImage: (Year, Tile, Data) => Unit
-  ): Unit =
-    ???
+    generateImage: (Year, Tile, Data) => Unit): Unit = {
+    val imageTuples = for
+      z <- 0 to 3
+      size: Int = 1 << z
+      x <- 0 until size
+      y <- 0 until size
+      (year, data) <- yearlyData
+    yield (year, Tile(x, y, z), data)
+
+    imageTuples.foreach((y, t, d) => generateImage(y, t, d))
+  }
 
