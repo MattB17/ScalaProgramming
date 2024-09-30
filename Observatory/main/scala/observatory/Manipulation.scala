@@ -7,6 +7,11 @@ import Visualization.*
   * 4th milestone: value-added information
   */
 object Manipulation extends ManipulationInterface:
+  private val gridLocs =
+    for
+      lat <- -89 to 90
+      lon <- -180 to 179
+    yield (lat, lon)
 
   /**
     * Note we could use memoization. However, when rendering the images we will need to calculate
@@ -18,12 +23,11 @@ object Manipulation extends ManipulationInterface:
     *         returns the predicted temperature at this location
     */
   def makeGrid(temperatures: Iterable[(Location, Temperature)]): GridLocation => Temperature = {
-    val gridTempMap = (
-      for
-        lat <- -89 to 90
-        lon <- -180 to 179
-      yield ((lat, lon), predictTemperature(temperatures, Location(lat, lon))))
+    val gridTempMap = gridLocs
+      .par
+      .map((lat, lon) => ((lat, lon), predictTemperature(temperatures, Location(lat, lon))))
       .toMap
+        
     gl => gridTempMap((gl.lat, gl.lon))
   }
 
@@ -32,8 +36,19 @@ object Manipulation extends ManipulationInterface:
     *                      is a collection of pairs of location and temperature)
     * @return A function that, given a latitude and a longitude, returns the average temperature at this location
     */
-  def average(temperaturess: Iterable[Iterable[(Location, Temperature)]]): GridLocation => Temperature =
-    ???
+  def average(temperaturess: Iterable[Iterable[(Location, Temperature)]]): GridLocation => Temperature = {
+    val gridTempMaps = temperaturess
+      .par
+      .map(temps => makeGrid(temps))
+    
+    val gridAvgTempMap = gridLocs
+      .par
+      .map((lat, lon) => (
+        (lat, lon), gridTempMaps.map(gridFunc => gridFunc(GridLocation(lat, lon))).sum / gridTempMaps.size))
+      .toMap
+    
+    gl => gridAvgTempMap((gl.lat, gl.lon))
+  }
 
   /**
     * @param temperatures Known temperatures

@@ -3,6 +3,8 @@ package observatory
 import Manipulation.*
 import Visualization.*
 
+import scala.collection
+
 trait ManipulationTest extends MilestoneSuite:
   private val milestoneTest = namedMilestoneTest("data manipulation", 4) _
   
@@ -35,5 +37,23 @@ trait ManipulationTest extends MilestoneSuite:
         assert(gridFunc(gl) <= 0)
       }
     })
+  }
+  
+  test("average with one temperature list") {
+    val temps: Iterable[Iterable[(Location, Temperature)]] = IndexedSeq(
+      IndexedSeq((Location(0, 0), 20)))
+    val gridAvgFunc = average(temps)
+    
+    gridLocs.foreach(gl => assertEqualsDouble(gridAvgFunc(gl), 20.0, 0.01))
+  }
+  
+  test("average with multiple temperature lists") {
+    val temps: Iterable[Iterable[(Location, Temperature)]] = IndexedSeq(
+      IndexedSeq((Location(0, 0), 20)),
+      IndexedSeq((Location(70, -160), 0)),
+      IndexedSeq((Location(-15, 10), 10)))
+    val gridAvgFunc = average(temps)
+    
+    gridLocs.foreach(gl => assertEqualsDouble(gridAvgFunc(gl), 10.0, 0.01))
   }
 
