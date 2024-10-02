@@ -68,7 +68,8 @@ object Visualization extends VisualizationInterface:
 
   /**
    * The linear interpolation between (x0, y0), (x1, y1) for x
-   * @param x The point for which we want the interpolation
+   *
+   * @param x  The point for which we want the interpolation
    * @param x0 The x value of the point to the left of x used for interpolation
    * @param y0 The y value of the point to the left of x used for interpolation
    * @param x1 The x value of the point to the right of x used for interpolation
