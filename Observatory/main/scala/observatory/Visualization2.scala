@@ -40,8 +40,11 @@ object Visualization2 extends Visualization2Interface:
     d01: Temperature,
     d10: Temperature,
     d11: Temperature
-  ): Temperature =
-    ???
+  ): Temperature = {
+    val t0 = interpolateTemp(point.x, d00, d10)
+    val t1 = interpolateTemp(point.x, d01, d11)
+    interpolateTemp(point.y, t0, t1)
+  }
 
   /**
     * @param grid Grid to visualize
