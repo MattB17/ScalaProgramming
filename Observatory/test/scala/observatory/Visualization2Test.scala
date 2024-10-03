@@ -49,4 +49,71 @@ trait Visualization2Test extends MilestoneSuite:
     assertEqualsDouble(bilinearInterpolation(p, 5, 12, 10, 15), 11.34, 0.001)
   }
 
+  test("getTempForLocation all temps the same") {
+    val l: Location = Location(70.3, 120.7)
+    val gridFunc: GridLocation => Temperature = gl => 10
+    assertEqualsDouble(getTempForLocation(l, gridFunc), 10.0, 0.01)
+  }
+
+  test("getTempForLocation location values are integer") {
+    val l: Location = Location(25, 50)
+    val gridFunc: GridLocation => Temperature = gl => {
+      if (gl.lat == 25 && gl.lon == 50) {
+        5
+      } else if (gl.lat == 25) {
+        4
+      } else if (gl.lon == 50) {
+        3
+      } else {
+        2
+      }
+    }
+
+    assertEqualsDouble(getTempForLocation(l, gridFunc), 5.0, 0.01)
+  }
+
+  test("getTempForLocation same temps on top and bottom") {
+    val l: Location = Location(10.6, 110.5)
+    val gridFunc: GridLocation => Temperature = gl => {
+      if (gl.lat == 10 && gl.lon == 110) {
+        7
+      } else if (gl.lat == 10) {
+        5
+      } else if (gl.lon == 110) {
+        7
+      } else {
+        5
+      }
+    }
+    assertEqualsDouble(getTempForLocation(l, gridFunc), 6.0, 0.01)
+  }
+
+  test("getTempForLocation same temps on left and right") {
+    val l: Location = Location(86.6, 34.3)
+    val gridFunc: GridLocation => Temperature = gl => {
+      if (gl.lat == 86) {
+        10
+      } else {
+        20
+      }
+    }
+    assertEqualsDouble(getTempForLocation(l, gridFunc), 16.0, 0.01)
+  }
+
+  test("getTempForLocation with 4 different temps") {
+    val l: Location = Location(0.4, 25.7)
+    val gridFunc: GridLocation => Temperature = gl => {
+      if (gl.lat == 0 && gl.lon == 25) {
+        5
+      } else if (gl.lat == 0) {
+        12
+      } else if (gl.lon == 25) {
+        10
+      } else {
+        15
+      }
+    }
+    assertEqualsDouble(getTempForLocation(l, gridFunc), 11.34, 0.001)
+  }
+
 
