@@ -64,16 +64,18 @@ object Interaction2 extends Interaction2Interface:
     * @param selectedYear The selected year
     * @return The URL pattern to retrieve tiles
     */
-  def layerUrlPattern(selectedLayer: Signal[Layer], selectedYear: Signal[Year]): Signal[String] =
-    ???
+  def layerUrlPattern(selectedLayer: Signal[Layer], selectedYear: Signal[Year]): Signal[String] = {
+    Signal("generated/" + selectedLayer().layerName.id + "/" + selectedYear() + "/{z}/{x}/{y}.png")
+  }
 
   /**
     * @param selectedLayer The selected layer
     * @param selectedYear The selected year
     * @return The caption to show
     */
-  def caption(selectedLayer: Signal[Layer], selectedYear: Signal[Year]): Signal[String] =
-    ???
+  def caption(selectedLayer: Signal[Layer], selectedYear: Signal[Year]): Signal[String] = {
+    Signal(selectedLayer().layerName.id.capitalize + " (" + selectedYear() + ")")
+  }
 
 
 // Interface used by the grading infrastructure. Do not change signatures
