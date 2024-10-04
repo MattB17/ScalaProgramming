@@ -40,7 +40,7 @@ object Interaction2 extends Interaction2Interface:
     * @return A signal containing the year bounds corresponding to the selected layer
     */
   def yearBounds(selectedLayer: Signal[Layer]): Signal[Range] = {
-    Signal(selectedLayer.currentValue.bounds)
+    Signal(selectedLayer().bounds)
   }
 
   /**
@@ -51,8 +51,13 @@ object Interaction2 extends Interaction2Interface:
     *         this method should return the closest value that is included
     *         in the `selectedLayer` bounds.
     */
-  def yearSelection(selectedLayer: Signal[Layer], sliderValue: Signal[Year]): Signal[Year] =
-    ???
+  def yearSelection(selectedLayer: Signal[Layer], sliderValue: Signal[Year]): Signal[Year] = {
+    Signal(
+      sliderValue()
+        .min(yearBounds(selectedLayer)().max)
+        .max(yearBounds(selectedLayer)().min)
+    )
+  }
 
   /**
     * @param selectedLayer The selected layer
