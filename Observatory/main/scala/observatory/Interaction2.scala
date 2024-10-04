@@ -1,5 +1,7 @@
 package observatory
 
+import observatory.LayerName.{Deviations, Temperatures}
+
 /**
   * 6th (and last) milestone: user interface polishing
   */
@@ -8,15 +10,38 @@ object Interaction2 extends Interaction2Interface:
   /**
     * @return The available layers of the application
     */
-  def availableLayers: Seq[Layer] =
-    ???
+  def availableLayers: Seq[Layer] = {
+    val yearRange: Range = 1975 to 2015
+    val tempColors: Seq[(Temperature, Color)] = Seq(
+      (60, Color(255, 255, 255)),
+      (32, Color(255, 0, 0)),
+      (12, Color(255, 255, 0)),
+      (0, Color(0, 255, 255)),
+      (-15, Color(0, 0, 255)),
+      (-27, Color(255, 0, 255)),
+      (-50, Color(33, 0, 107)),
+      (-60, Color(0, 0, 0)))
+    val tempLayer = Layer(Temperatures, tempColors, yearRange)
+
+    val devColors: Seq[(Temperature, Color)] = Seq(
+      (7, Color(0, 0, 0)),
+      (4, Color(255, 0, 0)),
+      (2, Color(255, 255, 0)),
+      (0, Color(255, 255, 255)),
+      (-2, Color(0, 255, 255)),
+      (-7, Color(0, 0, 255)))
+    val devLayer = Layer(Deviations, devColors, yearRange)
+
+    Seq(tempLayer, devLayer)
+  }
 
   /**
     * @param selectedLayer A signal carrying the layer selected by the user
     * @return A signal containing the year bounds corresponding to the selected layer
     */
-  def yearBounds(selectedLayer: Signal[Layer]): Signal[Range] =
-    ???
+  def yearBounds(selectedLayer: Signal[Layer]): Signal[Range] = {
+    Signal(selectedLayer.currentValue.bounds)
+  }
 
   /**
     * @param selectedLayer The selected layer
@@ -58,7 +83,7 @@ trait Interaction2Interface:
 enum LayerName:
   case Temperatures, Deviations
   def id: String =
-    this.match
+    this match
       case Temperatures => "temperatures"
       case Deviations => "deviations"
 
